@@ -106,6 +106,10 @@ extern void DrawMarker(cairo_t *cr, gint x, gint y, gint type);
 extern struct PointValue CalcPointValue(gint Xpos, gint Ypos, gint TabNum);
 extern void print_results(GtkWidget *widget, gpointer func_data);
 
+/* Excplicit declaration of functions */
+
+void remove_last(GtkWidget *widget, gpointer data);
+
 /****************************************************************/
 /* This function closes the window when the application is 	*/
 /* killed.							*/
@@ -455,7 +459,7 @@ void toggle_xy(GtkToggleButton *widget, gpointer func_data) {
 		}
 		if (bpressed[index]) { /* If the x axis point is already set */
 			remthis = -(index + 1); /* remove the square */
-			remove_last(widget, NULL);
+			remove_last(GTK_WIDGET(widget), NULL);
 		}
 		bpressed[ViewedTabNum][index] = FALSE; /* Set x axis point 1 to unset */
 	} else { /* If button is trying to get unpressed */

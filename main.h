@@ -23,6 +23,7 @@
  Authors email : jonas.frantz@welho.com
 
  */
+#include <gtk/gtk.h>									/* Include gtk library */
 
 #define ZOOMPIXSIZE 200					/* Size of zoom in window */
 #define ZOOMFACTOR 4					/* Zoom factor of zoom window */
@@ -40,6 +41,7 @@
 #define LOGBNUM 2
 
 #define URI_IDENTIFIER "file://"
+
 struct PointValue {
 	double Xv, Yv, Xerr, Yerr;
 };
@@ -51,3 +53,43 @@ typedef enum {
 typedef enum {
 	URI_LIST, PNG_DATA, JPEG_DATA, APP_X_COLOR, NUM_IMAGE_DATA,
 } UI_DROP_TARGET_INFO;
+
+struct TabData {
+	GtkWidget *drawing_area;
+	GtkWidget *zoom_area; 					// Drawing areas
+	GtkWidget *xyentry[4];
+	GtkWidget *exportbutton;
+	GtkWidget *remlastbutton; 				// Various buttons
+	GtkWidget *setxybutton[4];
+	GtkWidget *remallbutton; 				// Even more various buttons
+	GtkWidget *xc_entry, *yc_entry;
+	GtkWidget *file_entry, *nump_entry;
+	GtkWidget *xerr_entry, *yerr_entry; 	// Coordinate and filename entries
+	GtkWidget *logbox;
+	GtkWidget *zoomareabox;
+	GtkWidget *oppropbox;
+	GtkWidget *ViewPort;
+
+	cairo_surface_t *image;
+
+	gint axiscoords[4][2]; 					// X,Y coordinates of axispoints
+	gint **points; 							// Indexes of graphpoints and their coordinates
+	gint *lastpoints; 						// Indexes of last points put out
+	gint numpoints;
+	gint numlastpoints; 					// Number of points on graph and last put out
+	gint ordering; 							// Various control variables
+	gint XSize, YSize;
+	gint file_name_length;
+	gint MaxPoints; // = MAXPOINTS;
+	gint Action;
+	gdouble realcoords[4]; 					// X,Y coords on graph
+	gboolean UseErrors;
+	gboolean setxypressed[4];
+	gboolean bpressed[4]; 					// What axispoints have been set out ?
+	gboolean valueset[4];
+	gboolean logxy[2]; // = { FALSE, FALSE };
+	gchar *file_name; 						// Pointer to filename
+	gchar FileNames[256];
+
+	gint mousePointerCoords[2];
+};
