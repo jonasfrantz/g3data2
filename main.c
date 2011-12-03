@@ -94,6 +94,8 @@ gchar *file_name[MAXNUMTABS]; /* Pointer to filename */
 gchar FileNames[MAXNUMTABS][256];
 FILE *FP; /* File pointer */
 
+gint mousePointerCoords[MAXNUMTABS][2];
+
 GtkWidget *drawing_area_alignment;
 
 /* Declaration of extern functions */
@@ -103,16 +105,6 @@ extern gint min(gint x, gint y);
 extern void DrawMarker(cairo_t *cr, gint x, gint y, gint type);
 extern struct PointValue CalcPointValue(gint Xpos, gint Ypos, gint TabNum);
 extern void print_results(GtkWidget *widget, gpointer func_data);
-
-/* Explicit declaration of functions */
-
-void remove_last(GtkWidget *widget, gpointer data);
-void SetOrdering(GtkWidget *widget, gpointer func_data);
-void SetAction(GtkWidget *widget, gpointer func_data);
-void UseErrCB(GtkWidget *widget, gpointer func_data);
-void read_file_entry(GtkWidget *entry, gpointer func_data);
-
-// GCallback full_screen_action_callback(GtkWidget *widget, gpointer func_dat);
 
 /****************************************************************/
 /* This function closes the window when the application is 	*/
@@ -124,35 +116,57 @@ gint close_application(GtkWidget *widget, GdkEvent *event, gpointer data) {
 }
 
 gboolean draw_zoom_callback(GtkWidget *widget, cairo_t *cr, gpointer data) {
+	cairo_t *first_cr;
+	cairo_surface_t *first;
 
-	printf("draw zoom callback called\n");
+	gint TabNum = GPOINTER_TO_INT(data);
+
+	if (mousePointerCoords[TabNum][0] != -1) {
+
+		first = cairo_surface_create_similar(cairo_get_target(cr),
+				CAIRO_CONTENT_COLOR, ZOOMPIXSIZE, ZOOMPIXSIZE);
+
+		first_cr = cairo_create(first);
+		cairo_scale(first_cr, ZOOMFACTOR, ZOOMFACTOR);
+		cairo_set_source_surface(
+				first_cr,
+				image[TabNum],
+				-mousePointerCoords[TabNum][0] + ZOOMPIXSIZE / (2 * ZOOMFACTOR),
+				-mousePointerCoords[TabNum][1] + ZOOMPIXSIZE / (2 * ZOOMFACTOR));
+		cairo_paint(first_cr);
+		cairo_scale(first_cr, 1.0 / ZOOMFACTOR, 1.0 / ZOOMFACTOR);
+
+		DrawMarker(first_cr, ZOOMPIXSIZE / 2, ZOOMPIXSIZE / 2, 2);
+
+		cairo_set_source_surface(cr, first, 0, 0);
+		cairo_paint(cr);
+
+		cairo_surface_destroy(first);
+
+		cairo_destroy(first_cr);
+	}
 
 	return TRUE;
 }
 
 gboolean draw_callback(GtkWidget *widget, cairo_t *cr, gpointer data) {
 	guint width, height;
-	gint TabNum, i;
+	gint i;
 	cairo_t *first_cr;
 	cairo_surface_t *first;
 
-	TabNum = GPOINTER_TO_INT(data);
+	gint TabNum = GPOINTER_TO_INT(data);
 
 	width = gtk_widget_get_allocated_width(widget);
 	height = gtk_widget_get_allocated_height(widget);
-
-	double scalefactor = 1.0 * width / cairo_image_surface_get_width(
-			image[TabNum]);
 
 	first = cairo_surface_create_similar(cairo_get_target(cr),
 			CAIRO_CONTENT_COLOR, width, height);
 
 	first_cr = cairo_create(first);
-	cairo_scale(first_cr, scalefactor, scalefactor);
 	cairo_set_source_surface(first_cr, image[TabNum], 0, 0);
 	cairo_paint(first_cr);
 
-	cairo_scale(first_cr, 1.0 / scalefactor, 1.0 / scalefactor);
 	for (i = 0; i < 4; i++) {
 		if (bpressed[TabNum][i]) {
 			DrawMarker(first_cr, axiscoords[TabNum][i][0],
@@ -373,8 +387,6 @@ gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
 	gint x, y, TabNum;
 	gchar buf[32];
 	GdkModifierType state;
-	static gboolean FirstTime = TRUE;
-	//	static GdkPixbuf *gpbzoomimage;
 	struct PointValue CalcVal;
 
 	TabNum = GPOINTER_TO_INT(data);
@@ -382,27 +394,10 @@ gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
 	gdk_window_get_pointer(event->window, &x, &y, &state); /* Grab mousepointers coordinates */
 	/* on drawing area. */
 
-	//	if (FirstTime) {
-	//		gpbzoomimage = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-	//				ZOOMPIXSIZE, ZOOMPIXSIZE);
-	//		FirstTime = FALSE;
-	//	}
-
 	if (x >= 0 && y >= 0 && x < XSize[TabNum] && y < YSize[TabNum]) {
 
-		//		gdk_pixbuf_composite(gpbimage[TabNum], gpbzoomimage, 0, 0, ZOOMPIXSIZE,
-		//				ZOOMPIXSIZE, -x * ZOOMFACTOR + ZOOMPIXSIZE / 2,
-		//				-y * ZOOMFACTOR + ZOOMPIXSIZE / 2, 1.0 * ZOOMFACTOR,
-		//				1.0 * ZOOMFACTOR, GDK_INTERP_BILINEAR, 255);
-
-		//		cairo_t *cr = gdk_cairo_create(zoom_area[TabNum]->window);
-		//		gdk_cairo_set_source_pixbuf(cr, gpbzoomimage, 0, 0);
-		//		cairo_paint(cr);
-		//
-		//		DrawMarker(cr, ZOOMPIXSIZE / 2, ZOOMPIXSIZE / 2, 2); /* Then draw the square in the middle of the zoom area */
-		//
-		//		cairo_destroy(cr);
-
+		mousePointerCoords[TabNum][0] = x;
+		mousePointerCoords[TabNum][1] = y;
 		gtk_widget_queue_draw(zoom_area[TabNum]);
 
 		if (valueset[TabNum][0] && valueset[TabNum][1] && valueset[TabNum][2]
@@ -432,37 +427,6 @@ gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event,
 	//    g_object_unref(mngc);								/* Kill graphics context */
 	return TRUE;
 }
-
-/****************************************************************/
-/* This function is called when the drawing area is exposed, it	*/
-/* simply redraws the pixmap on it.				*/
-/****************************************************************/
-//static gint expose_event(GtkWidget *widget, GdkEventExpose *event,
-//		gpointer data) {
-//	gint i, TabNum;
-//
-//	TabNum = GPOINTER_TO_INT(data);
-//
-//	/*	gdk_draw_pixbuf(widget->window, widget->style->white_gc, gpbimage[TabNum],
-//	 event->area.x, event->area.y, event->area.x, event->area.y,
-//	 min(event->area.width, XSize[TabNum]),
-//	 min(event->area.height, YSize[TabNum]), GDK_RGB_DITHER_NONE, 0, 0);
-//	 */
-//	cairo_t *cr = gdk_cairo_create(widget->window);
-//	gdk_cairo_set_source_pixbuf(cr, gpbimage[TabNum], event->area.x,
-//			event->area.y);
-//	cairo_paint(cr);
-//
-//	for (i = 0; i < 4; i++)
-//		if (bpressed[TabNum][i])
-//			DrawMarker(cr, axiscoords[TabNum][i][0], axiscoords[TabNum][i][1],
-//					i / 2);
-//	for (i = 0; i < numpoints[TabNum]; i++)
-//		DrawMarker(cr, points[TabNum][i][0], points[TabNum][i][1], 2);
-//
-//	cairo_destroy(cr);
-//	return FALSE;
-//}
 
 /****************************************************************/
 /* This function is called when the drawing area is configured	*/
@@ -517,8 +481,8 @@ void SetAction(GtkWidget *widget, gpointer func_data) {
 /****************************************************************/
 /* Set whether to use error evaluation and printing or not.	*/
 /****************************************************************/
-void UseErrCB(GtkWidget *widget, gpointer func_data) {
-	//	UseErrors[ViewedTabNum] = (GTK_TOGGLE_BUTTON (widget)->active);
+void UseErrCB(GtkToggleButton *widget, gpointer func_data) {
+	UseErrors[ViewedTabNum] = gtk_toggle_button_get_active(widget);
 }
 
 /****************************************************************/
@@ -674,39 +638,45 @@ gint key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer pointer) {
 	if (event->keyval == GDK_KEY_Left) {
 		adjustment = gtk_viewport_get_hadjustment((GtkViewport *) ViewPort);
 		adj_val = gtk_adjustment_get_value(adjustment);
-		//			adj_val -= adjustment->page_size / 10.0;
-		//			if (adj_val < adjustment->lower)
-		//				adj_val = adjustment->lower;
+		adj_val -= gtk_adjustment_get_page_size(adjustment) / 10.0;
+		if (adj_val < gtk_adjustment_get_lower(adjustment))
+			adj_val = gtk_adjustment_get_lower(adjustment);
 		gtk_adjustment_set_value(adjustment, adj_val);
 		gtk_viewport_set_hadjustment((GtkViewport *) ViewPort, adjustment);
 	} else if (event->keyval == GDK_KEY_Right) {
 		adjustment = gtk_viewport_get_hadjustment((GtkViewport *) ViewPort);
 		adj_val = gtk_adjustment_get_value(adjustment);
-		//			adj_val += adjustment->page_size / 10.0;
-		//			if (adj_val > (adjustment->upper - adjustment->page_size))
-		//				adj_val = (adjustment->upper - adjustment->page_size);
+		adj_val += gtk_adjustment_get_page_size(adjustment) / 10.0;
+		if (adj_val > (gtk_adjustment_get_upper(adjustment)
+				- gtk_adjustment_get_page_size(adjustment)))
+			adj_val = (gtk_adjustment_get_upper(adjustment)
+					- gtk_adjustment_get_page_size(adjustment));
 		gtk_adjustment_set_value(adjustment, adj_val);
 		gtk_viewport_set_hadjustment((GtkViewport *) ViewPort, adjustment);
 	} else if (event->keyval == GDK_KEY_Up) {
 		adjustment = gtk_viewport_get_vadjustment((GtkViewport *) ViewPort);
 		adj_val = gtk_adjustment_get_value(adjustment);
-		//			adj_val -= adjustment->page_size / 10.0;
-		//			if (adj_val < adjustment->lower)
-		//				adj_val = adjustment->lower;
+		adj_val -= gtk_adjustment_get_page_size(adjustment) / 10.0;
+		if (adj_val < gtk_adjustment_get_lower(adjustment))
+			adj_val = gtk_adjustment_get_lower(adjustment);
 		gtk_adjustment_set_value(adjustment, adj_val);
 		gtk_viewport_set_vadjustment((GtkViewport *) ViewPort, adjustment);
 	} else if (event->keyval == GDK_KEY_Down) {
 		adjustment = gtk_viewport_get_vadjustment((GtkViewport *) ViewPort);
 		adj_val = gtk_adjustment_get_value(adjustment);
-		//			adj_val += adjustment->page_size / 10.0;
-		//			if (adj_val > (adjustment->upper - adjustment->page_size))
-		//				adj_val = (adjustment->upper - adjustment->page_size);
+		adj_val += gtk_adjustment_get_page_size(adjustment) / 10.0;
+		if (adj_val > (gtk_adjustment_get_upper(adjustment)
+				- gtk_adjustment_get_page_size(adjustment)))
+			adj_val = (gtk_adjustment_get_upper(adjustment)
+					- gtk_adjustment_get_page_size(adjustment));
 		gtk_adjustment_set_value(adjustment, adj_val);
 		gtk_viewport_set_vadjustment((GtkViewport *) ViewPort, adjustment);
 	} else if (event->keyval == GDK_KEY_Control_L) {
 		if (ViewedTabNum != -1) {
 			cursor = gdk_cursor_new(GDK_CIRCLE);
-			//				gdk_window_set_cursor(drawing_area[ViewedTabNum]->window, cursor);
+			gdk_window_set_cursor(
+					gtk_widget_get_parent_window(drawing_area[ViewedTabNum]),
+					cursor);
 			MovePointMode = TRUE;
 		}
 	}
@@ -719,13 +689,15 @@ gint key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer pointer) {
 gint key_release_event(GtkWidget *widget, GdkEventKey *event, gpointer pointer) {
 	GdkCursor *cursor;
 
-	//	if (event->keyval == GDK_Control_L) {
-	//		if (ViewedTabNum != -1) {
-	//			cursor = gdk_cursor_new(GDK_CROSSHAIR);
-	//			gdk_window_set_cursor(drawing_area[ViewedTabNum]->window, cursor);
-	//			MovePointMode = FALSE;
-	//		}
-	//	}
+	if (event->keyval == GDK_KEY_Control_L) {
+		if (ViewedTabNum != -1) {
+			cursor = gdk_cursor_new(GDK_CROSSHAIR);
+			gdk_window_set_cursor(
+					gtk_widget_get_parent_window(drawing_area[ViewedTabNum]),
+					cursor);
+			MovePointMode = FALSE;
+		}
+	}
 
 	return 0;
 }
@@ -737,28 +709,22 @@ gint key_release_event(GtkWidget *widget, GdkEventKey *event, gpointer pointer) 
 gint InsertImage(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 		gint TabNum) {
 
-	//	gint newX, newY;
 	gdouble mScale;
-	//	GdkPixbuf *loadgpbimage;
 	GdkCursor *cursor;
 	GtkWidget *dialog;
 	gchar buf[256]; /* Text buffer for window title */
 
 	image[TabNum] = cairo_image_surface_create_from_png(filename);
+	if (cairo_surface_status(image[TabNum]) != CAIRO_STATUS_SUCCESS) {
+		dialog = gtk_message_dialog_new(GTK_WINDOW(window), /* Notify user of the error */
+		GTK_DIALOG_DESTROY_WITH_PARENT, /* with a dialog */
+		GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Error loading file '%s'",
+				filename);
+		gtk_dialog_run(GTK_DIALOG (dialog));
+		gtk_widget_destroy(dialog);
 
-	//	loadgpbimage = gdk_pixbuf_new_from_file(filename, NULL); /* Load image */
-	//	if (loadgpbimage == NULL) { /* If unable to load image */
-	//		dialog = gtk_message_dialog_new(GTK_WINDOW(window), /* Notify user of the error */
-	//		GTK_DIALOG_DESTROY_WITH_PARENT, /* with a dialog */
-	//		GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "Error loading file '%s'",
-	//				filename);
-	//		gtk_dialog_run(GTK_DIALOG (dialog));
-	//		gtk_widget_destroy(dialog);
-	//
-	//		return -1; /* exit */
-	//	}
-	//	XSize[TabNum] = gdk_pixbuf_get_width(loadgpbimage); /* Get image width */
-	//	YSize[TabNum] = gdk_pixbuf_get_height(loadgpbimage); /* Get image height */
+		return -1; /* exit */
+	}
 
 	XSize[TabNum] = cairo_image_surface_get_width(image[TabNum]);
 	YSize[TabNum] = cairo_image_surface_get_height(image[TabNum]);
@@ -781,6 +747,25 @@ gint InsertImage(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	if (Scale != -1) {
 		XSize[TabNum] *= Scale;
 		YSize[TabNum] *= Scale;
+
+		// flush to ensure all writing to the image was done
+		cairo_surface_flush(image[TabNum]);
+
+		cairo_t *cr;
+		cr = cairo_create(image[TabNum]);
+
+		cairo_surface_t *first;
+		first = cairo_surface_create_similar(cairo_get_target(cr),
+				CAIRO_CONTENT_COLOR, XSize[TabNum], YSize[TabNum]);
+
+		cairo_t *first_cr;
+		first_cr = cairo_create(first);
+		cairo_scale(first_cr, Scale, Scale);
+		cairo_set_source_surface(first_cr, image[TabNum], 0, 0);
+		cairo_paint(first_cr);
+		image[TabNum] = first;
+
+		cairo_destroy(first_cr);
 	}
 
 	drawing_area[TabNum] = gtk_drawing_area_new(); /* Create new drawing area */
@@ -811,7 +796,8 @@ gint InsertImage(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_widget_show(drawing_area[TabNum]);
 
 	cursor = gdk_cursor_new(GDK_CROSSHAIR);
-	//	gdk_window_set_cursor(drawing_area[TabNum]->window, cursor);
+	gdk_window_set_cursor(gtk_widget_get_parent_window(drawing_area[TabNum]),
+			cursor);
 
 	return 0;
 }
@@ -921,6 +907,9 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	numpoints[TabNum] = 0;
 	numlastpoints[TabNum] = 0;
 	ordering[TabNum] = 0;
+
+	mousePointerCoords[TabNum][0] = -1;
+	mousePointerCoords[TabNum][1] = -1;
 
 	lastpoints[TabNum]
 			= (gint *) malloc(sizeof(gint) * (MaxPoints[TabNum] + 4));
