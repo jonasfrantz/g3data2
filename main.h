@@ -93,3 +93,9 @@ struct TabData {
 
 	gint mousePointerCoords[2];
 };
+
+struct ButtonData {
+	struct TabData *tabData;
+	gint index;
+};
+
