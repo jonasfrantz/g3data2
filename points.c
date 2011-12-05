@@ -35,11 +35,6 @@
 extern void Order(struct PointValue *RealPos, gint left, gint right,
 		gint ordering);
 
-/* Extern variables */
-
-extern struct TabData **tabData;
-extern gint ViewedTabNum;
-
 /****************************************************************/
 /* This function sets the numpoints entry to numpoints variable	*/
 /* value.							*/
@@ -65,78 +60,78 @@ gint min(gint x, gint y) {
 /* This function calculates the true value of the point based	*/
 /* on the coordinates of the point on the bitmap.		*/
 /****************************************************************/
-struct PointValue CalcPointValue(gint Xpos, gint Ypos, gint TabNum) {
+struct PointValue CalcPointValue(gint Xpos, gint Ypos, struct TabData *tabData) {
 	double alpha, beta, x21, x43, y21, y43, rlc[4]; /* Declare help variables */
 	struct PointValue PV;
 
-	x21 = (double) tabData[TabNum]->axiscoords[1][0] - tabData[TabNum]->axiscoords[0][0]; /* Calculate deltax of x axis points */
-	y21 = (double) tabData[TabNum]->axiscoords[1][1] - tabData[TabNum]->axiscoords[0][1]; /* Calculate deltay of x axis points */
-	x43 = (double) tabData[TabNum]->axiscoords[3][0] - tabData[TabNum]->axiscoords[2][0]; /* Calculate deltax of y axis points */
-	y43 = (double) tabData[TabNum]->axiscoords[3][1] - tabData[TabNum]->axiscoords[2][1]; /* Calculate deltay of y axis points */
+	x21 = (double) tabData->axiscoords[1][0] - tabData->axiscoords[0][0]; /* Calculate deltax of x axis points */
+	y21 = (double) tabData->axiscoords[1][1] - tabData->axiscoords[0][1]; /* Calculate deltay of x axis points */
+	x43 = (double) tabData->axiscoords[3][0] - tabData->axiscoords[2][0]; /* Calculate deltax of y axis points */
+	y43 = (double) tabData->axiscoords[3][1] - tabData->axiscoords[2][1]; /* Calculate deltay of y axis points */
 
-	if (tabData[TabNum]->logxy[0]) { /* If x axis is logarithmic, store	*/
-		rlc[0] = log(tabData[TabNum]->realcoords[0]); /* recalculated values in rlc.		*/
-		rlc[1] = log(tabData[TabNum]->realcoords[1]);
+	if (tabData->logxy[0]) { /* If x axis is logarithmic, store	*/
+		rlc[0] = log(tabData->realcoords[0]); /* recalculated values in rlc.		*/
+		rlc[1] = log(tabData->realcoords[1]);
 	} else {
-		rlc[0] = tabData[TabNum]->realcoords[0]; /* Else store old values in rlc.	*/
-		rlc[1] = tabData[TabNum]->realcoords[1];
+		rlc[0] = tabData->realcoords[0]; /* Else store old values in rlc.	*/
+		rlc[1] = tabData->realcoords[1];
 	}
 
-	if (tabData[TabNum]->logxy[1]) {
-		rlc[2] = log(tabData[TabNum]->realcoords[2]); /* If y axis is logarithmic, store      */
-		rlc[3] = log(tabData[TabNum]->realcoords[3]); /* recalculated values in rlc.          */
+	if (tabData->logxy[1]) {
+		rlc[2] = log(tabData->realcoords[2]); /* If y axis is logarithmic, store      */
+		rlc[3] = log(tabData->realcoords[3]); /* recalculated values in rlc.          */
 	} else {
-		rlc[2] = tabData[TabNum]->realcoords[2]; /* Else store old values in rlc.        */
-		rlc[3] = tabData[TabNum]->realcoords[3];
+		rlc[2] = tabData->realcoords[2]; /* Else store old values in rlc.        */
+		rlc[3] = tabData->realcoords[3];
 	}
 
-	alpha = ((tabData[TabNum]->axiscoords[0][0] - (double) Xpos)
-			- (tabData[TabNum]->axiscoords[0][1] - (double) Ypos) * (x43 / y43)) / (x21
+	alpha = ((tabData->axiscoords[0][0] - (double) Xpos)
+			- (tabData->axiscoords[0][1] - (double) Ypos) * (x43 / y43)) / (x21
 			- ((y21 * x43) / y43));
-	beta = ((tabData[TabNum]->axiscoords[2][1] - (double) Ypos)
-			- (tabData[TabNum]->axiscoords[2][0] - (double) Xpos) * (y21 / x21)) / (y43
+	beta = ((tabData->axiscoords[2][1] - (double) Ypos)
+			- (tabData->axiscoords[2][0] - (double) Xpos) * (y21 / x21)) / (y43
 			- ((x43 * y21) / x21));
 
-	if (tabData[TabNum]->logxy[0])
+	if (tabData->logxy[0])
 		PV.Xv = exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
 	else
 		PV.Xv = -alpha * (rlc[1] - rlc[0]) + rlc[0];
 
-	if (tabData[TabNum]->logxy[1])
+	if (tabData->logxy[1])
 		PV.Yv = exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
 	else
 		PV.Yv = -beta * (rlc[3] - rlc[2]) + rlc[2];
 
-	alpha = ((tabData[TabNum]->axiscoords[0][0] - (double) (Xpos + 1))
-			- (tabData[TabNum]->axiscoords[0][1] - (double) (Ypos + 1)) * (x43 / y43))
+	alpha = ((tabData->axiscoords[0][0] - (double) (Xpos + 1))
+			- (tabData->axiscoords[0][1] - (double) (Ypos + 1)) * (x43 / y43))
 			/ (x21 - ((y21 * x43) / y43));
-	beta = ((tabData[TabNum]->axiscoords[2][1] - (double) (Ypos + 1))
-			- (tabData[TabNum]->axiscoords[2][0] - (double) (Xpos + 1)) * (y21 / x21))
+	beta = ((tabData->axiscoords[2][1] - (double) (Ypos + 1))
+			- (tabData->axiscoords[2][0] - (double) (Xpos + 1)) * (y21 / x21))
 			/ (y43 - ((x43 * y21) / x21));
 
-	if (tabData[TabNum]->logxy[0])
+	if (tabData->logxy[0])
 		PV.Xerr = exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
 	else
 		PV.Xerr = -alpha * (rlc[1] - rlc[0]) + rlc[0];
 
-	if (tabData[TabNum]->logxy[1])
+	if (tabData->logxy[1])
 		PV.Yerr = exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
 	else
 		PV.Yerr = -beta * (rlc[3] - rlc[2]) + rlc[2];
 
-	alpha = ((tabData[TabNum]->axiscoords[0][0] - (double) (Xpos - 1))
-			- (tabData[TabNum]->axiscoords[0][1] - (double) (Ypos - 1)) * (x43 / y43))
+	alpha = ((tabData->axiscoords[0][0] - (double) (Xpos - 1))
+			- (tabData->axiscoords[0][1] - (double) (Ypos - 1)) * (x43 / y43))
 			/ (x21 - ((y21 * x43) / y43));
-	beta = ((tabData[TabNum]->axiscoords[2][1] - (double) (Ypos - 1))
-			- (tabData[TabNum]->axiscoords[2][0] - (double) (Xpos - 1)) * (y21 / x21))
+	beta = ((tabData->axiscoords[2][1] - (double) (Ypos - 1))
+			- (tabData->axiscoords[2][0] - (double) (Xpos - 1)) * (y21 / x21))
 			/ (y43 - ((x43 * y21) / x21));
 
-	if (tabData[TabNum]->logxy[0])
+	if (tabData->logxy[0])
 		PV.Xerr -= exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
 	else
 		PV.Xerr -= -alpha * (rlc[1] - rlc[0]) + rlc[0];
 
-	if (tabData[TabNum]->logxy[1])
+	if (tabData->logxy[1])
 		PV.Yerr -= exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
 	else
 		PV.Yerr -= -beta * (rlc[3] - rlc[2]) + rlc[2];
@@ -152,54 +147,57 @@ struct PointValue CalcPointValue(gint Xpos, gint Ypos, gint TabNum) {
 /* pressed, it calculate the values of the datapoints and 	*/
 /* prints them through stdout.					*/
 /****************************************************************/
-void print_results(GtkWidget *widget, gpointer func_data) {
+void print_results(GtkWidget *widget, gpointer data) {
 	gint i; /* Declare index variable */
 	gboolean print2file;
 	FILE *FP;
+	struct TabData *tabData;
+
+	tabData = (struct TabData *) data;
 
 	struct PointValue *RealPos, CalcVal;
 
-	print2file = tabData[ViewedTabNum]->Action;
+	print2file = tabData->Action;
 
 	if (print2file == PRINT2FILE) {
-		FP = fopen(tabData[ViewedTabNum]->file_name, "w"); /* Open file for writing */
+		FP = fopen(tabData->file_name, "w"); /* Open file for writing */
 		if (FP == NULL) {
-			printf("Could not open %s for writing\n", tabData[ViewedTabNum]->file_name); /* If unable to open print error */
+			printf("Could not open %s for writing\n", tabData->file_name); /* If unable to open print error */
 			return;
 		}
 	}
 
 	RealPos = (struct PointValue *) malloc(
-			sizeof(struct PointValue) * tabData[ViewedTabNum]->numpoints);
+			sizeof(struct PointValue) * tabData->numpoints);
 
 	/* Next up is recalculating the positions of the points by solving a 2*2 matrix */
 
-	for (i = 0; i < tabData[ViewedTabNum]->numpoints; i++) {
-		CalcVal = CalcPointValue(tabData[ViewedTabNum]->points[i][0],
-				tabData[ViewedTabNum]->points[i][1], ViewedTabNum);
+	for (i = 0; i < tabData->numpoints; i++) {
+		CalcVal = CalcPointValue(tabData->points[i][0],
+				tabData->points[i][1], tabData);
 		RealPos[i].Xv = CalcVal.Xv;
 		RealPos[i].Yv = CalcVal.Yv;
 		RealPos[i].Xerr = CalcVal.Xerr;
 		RealPos[i].Yerr = CalcVal.Yerr;
 	}
 
-	if (tabData[ViewedTabNum]->ordering != 0) {
-		Order(RealPos, 0, tabData[ViewedTabNum]->numpoints - 1, tabData[ViewedTabNum]->ordering);
+	if (tabData->ordering != 0) {
+		Order(RealPos, 0, tabData->numpoints - 1, tabData->ordering);
 	}
 
 	/* Print results to stdout or file */
 
-	for (i = 0; i < tabData[ViewedTabNum]->numpoints; i++) {
+	for (i = 0; i < tabData->numpoints; i++) {
 		if (print2file == PRINT2FILE) {
 			fprintf(FP, "%.12g  %.12g", RealPos[i].Xv, RealPos[i].Yv);
-			if (tabData[ViewedTabNum]->UseErrors) {
+			if (tabData->UseErrors) {
 				fprintf(FP, "\t%.12g  %.12g\n", RealPos[i].Xerr,
 						RealPos[i].Yerr);
 			} else
 				fprintf(FP, "\n");
 		} else {
 			printf("%.12g  %.12g", RealPos[i].Xv, RealPos[i].Yv);
-			if (tabData[ViewedTabNum]->UseErrors) {
+			if (tabData->UseErrors) {
 				printf("\t%.12g  %.12g\n", RealPos[i].Xerr, RealPos[i].Yerr);
 			} else
 				printf("\n");
