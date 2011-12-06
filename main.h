@@ -1,29 +1,30 @@
 /*
 
- g3data : A program for grabbing data from scanned graphs
- Copyright (C) 2000 Jonas Frantz
+g3data2 : A program for grabbing data from scanned graphs
+Copyright (C) 2011 Jonas Frantz
 
- This file is part of g3data.
+    This file is part of g3data2.
 
- g3data is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
+    g3data2 is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
 
- g3data is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+    g3data2 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
- Authors email : jonas.frantz@welho.com
+Authors email : jonas@frantz.fi
 
  */
 #include <gtk/gtk.h>									/* Include gtk library */
+
+#define VERSION "1.0.0"					/* Version number */
 
 #define ZOOMPIXSIZE 200					/* Size of zoom in window */
 #define ZOOMFACTOR 4					/* Zoom factor of zoom window */
@@ -33,7 +34,6 @@
 #define MARKERTHICKNESS 2				/* Axis marker thickness */
 #define MAXPOINTS 256					/* Maximum number of points per memory allocation */
 #define MAXNUMTABS 128					/* Maximum number of open tabs */
-#define VERSION "1.0.0"					/* Version number */
 #define MOVETRESHOLD 3
 
 #define ACTIONBNUM 2

@@ -1,26 +1,25 @@
 /*
 
- g3data : A program for grabbing data from scanned graphs
- Copyright (C) 2000 Jonas Frantz
+g3data2 : A program for grabbing data from scanned graphs
+Copyright (C) 2011 Jonas Frantz
 
- This file is part of g3data.
+    This file is part of g3data2.
 
- g3data is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
+    g3data2 is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
 
- g3data is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+    g3data2 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
- Authors email : jonas.frantz@welho.com
+Authors email : jonas@frantz.fi
 
  */
 
@@ -57,10 +56,10 @@ GtkActionGroup *tab_action_group;
 // Declaration of global variables
 //gint ViewedTabNum = -1;
 gint NoteBookNumPages = 0;
-gboolean WinFullScreen;
+//gboolean WinFullScreen;
 gboolean MovePointMode = FALSE;
 gboolean HideLog = FALSE, HideZoomArea = FALSE, HideOpProp = FALSE;
-FILE *FP;
+//FILE *FP;
 
 // Declaration of extern functions
 extern void SetNumPointsEntry(GtkWidget *np_entry, gint np);
@@ -344,9 +343,10 @@ gint button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data)
 /****************************************************************/
 gint button_release_event(GtkWidget *widget, GdkEventButton *event,
 		gpointer data) {
-	struct TabData *tabData;
-
-	tabData = (struct TabData *) data;
+// For future reference:
+//	struct TabData *tabData;
+//
+//	tabData = (struct TabData *) data;
 
 	if (event->button == 1) {
 	} else if (event->button == 2) {
@@ -1372,7 +1372,7 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	}
 
 	gtk_action_group_set_sensitive(tab_action_group, TRUE);
-	NoteBookNumPages++;
+//	NoteBookNumPages++;
 
 	if (HideZoomArea)
 		for (i = 0; i < MAXNUMTABS; i++)
@@ -1540,9 +1540,9 @@ GCallback menu_tab_close(void) {
 	gtk_notebook_remove_page((GtkNotebook *) mainnotebook,
 			gtk_notebook_get_current_page((GtkNotebook *) mainnotebook)); /* This appearently takes care of everything */
 
-	NoteBookNumPages--;
+//	NoteBookNumPages--;
 
-	if (NoteBookNumPages == 0)
+	if (gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook) == 0)
 		gtk_action_group_set_sensitive(tab_action_group, FALSE);
 
 	return NULL;
@@ -1554,10 +1554,10 @@ GCallback menu_tab_close(void) {
 GCallback full_screen_action_callback(GtkWidget *widget, gpointer func_data) {
 	if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
 		gtk_window_fullscreen(GTK_WINDOW (window));
-		WinFullScreen = TRUE;
+//		WinFullScreen = TRUE;
 	} else {
 		gtk_window_unfullscreen(GTK_WINDOW (window));
-		WinFullScreen = FALSE;
+//		WinFullScreen = FALSE;
 	}
 	return NULL;
 }

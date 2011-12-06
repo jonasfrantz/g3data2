@@ -1,18 +1,18 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
 <refentry>
 <refentryinfo>
-	<date>2007-03-16</date>
+	<date>2011-12-06</date>
 </refentryinfo>
 <refmeta>
 	<refentrytitle>
-		<application>g3data</application>
+		<application>g3data2</application>
 	</refentrytitle>
 	<manvolnum>1</manvolnum>
-	<refmiscinfo>g3data 1.5.1</refmiscinfo>
+	<refmiscinfo>g3data2 1.0.0</refmiscinfo>
 </refmeta>
 <refnamediv>
 	<refname>
-		<application>g3data</application>
+		<application>g3data2</application>
 	</refname>
 	<refpurpose>
 	A tool for extracting data from graphs.
@@ -20,7 +20,7 @@
 </refnamediv>
 <refsynopsisdiv>
 	<cmdsynopsis>
-	<command>g3data</command>
+	<command>g3data2</command>
       <arg><option>-max<replaceable> x y</replaceable></option></arg>
       <arg><option>-scale<replaceable> factor</replaceable></option></arg>
       <arg><option>-coords<replaceable> llx lly rux ruy</replaceable></option></arg>
@@ -36,9 +36,9 @@
 	</refsect1info>
 	<title>DESCRIPTION</title>
 	<para>
-	<command>g3data</command> is a tool for extracting data
+	<command>g3data2</command> is a tool for extracting data
     from scanned graphs. For graphs published in scientific articles 
-    the actual data is usually not explicitly given ; g3data makes the
+    the actual data is usually not explicitly given ; g3data2 makes the
     process of extracting this data easy.
 	</para>
 </refsect1>
@@ -105,16 +105,16 @@
 <refsect1>
 	<title>USAGE</title>
 	<para>
-	<command>g3data</command> -scale 2 -errors test1.png
+	<command>g3data2</command> -scale 2 -errors test1.png
 	</para>
 	<para>
-	<command>g3data</command> -scale 2 -lny -errors test2.png
+	<command>g3data2</command> -scale 2 -lny -errors test2.png
 	</para>
 </refsect1>
 <!-- <refsect1>
 	<title>CAVEATS</title>
 	<para>
-	Other programs named <command>g3data</command> may exist and actually
+	Other programs named <command>g3data2</command> may exist and actually
 	do something!
 	</para>
 </refsect1> -->

@@ -1,16 +1,16 @@
 /*
 
-g3data : A program for grabbing data from scanned graphs
-Copyright (C) 2000 Jonas Frantz
+g3data2 : A program for grabbing data from scanned graphs
+Copyright (C) 2011 Jonas Frantz
 
-    This file is part of g3data.
+    This file is part of g3data2.
 
-    g3data is free software; you can redistribute it and/or modify
+    g3data2 is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
-    g3data is distributed in the hope that it will be useful,
+    g3data2 is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -19,8 +19,7 @@ Copyright (C) 2000 Jonas Frantz
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
-Authors email : jonas.frantz@welho.com
+Authors email : jonas@frantz.fi
 
 */
 

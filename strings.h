@@ -1,16 +1,16 @@
 /*
 
-g3data : A program for grabbing data from scanned graphs
-Copyright (C) 2000 Jonas Frantz
+g3data2 : A program for grabbing data from scanned graphs
+Copyright (C) 2011 Jonas Frantz
 
-    This file is part of g3data.
+    This file is part of g3data2.
 
-    g3data is free software; you can redistribute it and/or modify
+    g3data2 is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
-    g3data is distributed in the hope that it will be useful,
+    g3data2 is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -19,8 +19,7 @@ Copyright (C) 2000 Jonas Frantz
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
-Authors email : jonas.frantz@welho.com
+Authors email : jonas@frantz.fi
 
 */
 
@@ -28,12 +27,12 @@ Authors email : jonas.frantz@welho.com
 /* 					ABOUT INFO 						*/
 /************************************************************************************************/
 
-#define PROGNAME "g3data"
-#define COPYRIGHT "Copyright (C) 2000 Jonas Frantz"
+#define PROGNAME "g3data2"
+#define COPYRIGHT "Copyright (C) 2011 Jonas Frantz"
 #define COMMENTS "Grab graph data, a program for extracting data from graphs"
-#define LICENSE "g3data is free software; you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation; either version 2 of the License, or\n(at your option) any later version.\n\ng3data is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program; if not, write to the Free Software\nFoundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\n"
+#define LICENSE PROGNAME" is free software; you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation; either version 2 of the License, or\n(at your option) any later version.\n\ng3data is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program; if not, write to the Free Software\nFoundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\n"
 #define HOMEPAGEURL "http://www.frantz.fi/software/g3data.php"
-#define HOMEPAGELABEL "g3data homepage"
+#define HOMEPAGELABEL PROGNAME" homepage"
 #define AUTHORS {"Jonas Frantz", NULL}
 
 /************************************************************************************************/
@@ -41,12 +40,12 @@ Authors email : jonas.frantz@welho.com
 /************************************************************************************************/
 
 gchar HelpText[] =	"\n"
-                        "g3data version "VERSION", Copyright (C) 2000 Jonas Frantz\n"
-                        " g3data comes with ABSOLUTELY NO WARRANTY; for details\n"
+                        PROGNAME" version "VERSION", "COPYRIGHT"\n"
+                        " "PROGNAME" comes with ABSOLUTELY NO WARRANTY; for details\n"
                         " check out the documentation.  This is free software, and\n"
                         " you are welcome to redistribute it under all conditions.\n"
                         "\n"
-                        " Usage : g3data [options] [file1.ext [file2.ext [...]]]\n"
+                        " Usage : "PROGNAME" [options] [file1.ext [file2.ext [...]]]\n"
                         "\n"
                         "  Options :\n"
                         "      -max <x> <y>                    : If picture is larger x-wise than x or y-wise than y,\n"
@@ -78,11 +77,11 @@ gchar HelpText[] =	"\n"
 /* 					BUTTON/CHECKBUTTON/LABELS 				*/
 /************************************************************************************************/
 
-gchar Dialog_Title[] = "g3data Export data";
+gchar Dialog_Title[] = PROGNAME" Export data";
 
-gchar Window_Title_NoneOpen[] = "g3data - No open files";
+gchar Window_Title_NoneOpen[] = PROGNAME" - No open files";
 
-gchar Window_Title[] = "%s - g3data";
+gchar Window_Title[] = "%s - "PROGNAME;
                                                                                                                                                                     
 gchar setxylabel[4][40] = {"Set point X<sub>1</sub> on X axis (_1)",
                            "Set point X<sub>2</sub> on X axis (_2)",
