@@ -34,6 +34,7 @@ Authors email : jonas@frantz.fi
 #define MARKERTHICKNESS 2				/* Axis marker thickness */
 #define MAXPOINTS 256					/* Maximum number of points per memory allocation */
 #define MAXNUMTABS 128					/* Maximum number of open tabs */
+#define MAXNUMFILES 256
 #define MOVETRESHOLD 3
 
 #define ACTIONBNUM 2

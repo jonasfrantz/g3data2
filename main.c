@@ -1,25 +1,25 @@
 /*
 
-g3data2 : A program for grabbing data from scanned graphs
-Copyright (C) 2011 Jonas Frantz
+ g3data2 : A program for grabbing data from scanned graphs
+ Copyright (C) 2011 Jonas Frantz
 
-    This file is part of g3data2.
+ This file is part of g3data2.
 
-    g3data2 is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+ g3data2 is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
 
-    g3data2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+ g3data2 is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Authors email : jonas@frantz.fi
+ Authors email : jonas@frantz.fi
 
  */
 
@@ -48,18 +48,17 @@ Authors email : jonas@frantz.fi
 #define WINDOW_BORDER 12
 #endif
 
+// This is the name we will attach the data structure to the container with
+static const char *DATA_STORE_NAME = "tabdatastruct";
+
 // Declaration of gtk variables
-GtkWidget *window; /* Window */
+GtkWidget *window;
 GtkWidget *mainnotebook;
 GtkActionGroup *tab_action_group;
 
 // Declaration of global variables
-//gint ViewedTabNum = -1;
-gint NoteBookNumPages = 0;
-//gboolean WinFullScreen;
 gboolean MovePointMode = FALSE;
 gboolean HideLog = FALSE, HideZoomArea = FALSE, HideOpProp = FALSE;
-//FILE *FP;
 
 // Declaration of extern functions
 extern void SetNumPointsEntry(GtkWidget *np_entry, gint np);
@@ -200,6 +199,57 @@ void SetButtonSensitivity(struct TabData *tabData) {
 	}
 }
 
+gboolean allocatePointData(struct TabData *tabData) {
+	gint i;
+
+	if (tabData->lastpoints == NULL) {
+		tabData->lastpoints = (gint *) malloc(
+				sizeof(gint) * (tabData->MaxPoints + 4));
+		if (tabData->lastpoints == NULL) {
+			printf("Error allocating memory for lastpoints. Exiting.\n");
+			return FALSE;
+		}
+		tabData->points = (void *) malloc(sizeof(gint *) * tabData->MaxPoints);
+		if (tabData->points == NULL) {
+			printf("Error allocating memory for points. Exiting.\n");
+			return FALSE;
+		}
+		for (i = 0; i < tabData->MaxPoints; i++) {
+			tabData->points[i] = (gint *) malloc(sizeof(gint) * 2);
+			if (tabData->points[i] == NULL) {
+				printf("Error allocating memory for points[%d]. Exiting.\n", i);
+				return FALSE;
+			}
+		}
+		return TRUE;
+	}
+	if (tabData->numpoints > tabData->MaxPoints - 1) {
+		i = tabData->MaxPoints;
+		tabData->MaxPoints += MAXPOINTS;
+		tabData->lastpoints = realloc(tabData->lastpoints,
+				sizeof(gint) * (tabData->MaxPoints + 4));
+		if (tabData->lastpoints == NULL) {
+			printf("Error reallocating memory for lastpoints. Exiting.\n");
+			return FALSE;
+		}
+		tabData->points = realloc(tabData->points,
+				sizeof(gint *) * tabData->MaxPoints);
+		if (tabData->points == NULL) {
+			printf("Error reallocating memory for points. Exiting.\n");
+			return FALSE;
+		}
+		for (; i < tabData->MaxPoints; i++) {
+			tabData->points[i] = malloc(sizeof(gint) * 2);
+			if (tabData->points[i] == NULL) {
+				printf("Error allocating memory for points[%d]. Exiting.\n", i);
+				return FALSE;
+			}
+		}
+	}
+	return TRUE;
+}
+
+
 /****************************************************************/
 /* When a button is pressed inside the drawing area this 	*/
 /* function is called, it handles axispoints and graphpoints	*/
@@ -214,6 +264,8 @@ gint button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 	gdk_window_get_pointer(event->window, &x, &y, &state); /* Get pointer state */
 
+	allocatePointData(tabData);
+
 	if (event->button == 1) { /* If button 1 (leftmost) is pressed */
 		if (MovePointMode) {
 			for (i = 0; i < tabData->numpoints; i++) {
@@ -226,33 +278,6 @@ gint button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data)
 			/* If none of the set axispoint buttons been pressed */
 			if (!tabData->setxypressed[0] && !tabData->setxypressed[1]
 					&& !tabData->setxypressed[2] && !tabData->setxypressed[3]) {
-				if (tabData->numpoints > tabData->MaxPoints - 1) {
-					i = tabData->MaxPoints;
-					tabData->MaxPoints += MAXPOINTS;
-					tabData->lastpoints = realloc(tabData->lastpoints,
-							sizeof(gint) * (tabData->MaxPoints + 4));
-					if (tabData->lastpoints == NULL) {
-						printf(
-								"Error reallocating memory for lastpoints. Exiting.\n");
-						exit(-1);
-					}
-					tabData->points = realloc(tabData->points,
-							sizeof(gint *) * tabData->MaxPoints);
-					if (tabData->points == NULL) {
-						printf(
-								"Error reallocating memory for points. Exiting.\n");
-						exit(-1);
-					}
-					for (; i < tabData->MaxPoints; i++) {
-						tabData->points[i] = malloc(sizeof(gint) * 2);
-						if (tabData->points[i] == NULL) {
-							printf(
-									"Error allocating memory for points[%d]. Exiting.\n",
-									i);
-							exit(-1);
-						}
-					}
-				}
 				tabData->points[tabData->numpoints][0] = x; /* Save x coordinate */
 				tabData->points[tabData->numpoints][1] = y; /* Save x coordinate */
 				tabData->lastpoints[tabData->numlastpoints]
@@ -343,10 +368,10 @@ gint button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data)
 /****************************************************************/
 gint button_release_event(GtkWidget *widget, GdkEventButton *event,
 		gpointer data) {
-// For future reference:
-//	struct TabData *tabData;
-//
-//	tabData = (struct TabData *) data;
+	// For future reference:
+	//	struct TabData *tabData;
+	//
+	//	tabData = (struct TabData *) data;
 
 	if (event->button == 1) {
 	} else if (event->button == 2) {
@@ -719,7 +744,6 @@ gint InsertImage(GtkWidget *drawing_area_alignment, char *filename,
 	gdouble mScale;
 	GdkCursor *cursor;
 	GtkWidget *dialog;
-	gchar buf[256]; /* Text buffer for window title */
 
 	tabData->image = cairo_image_surface_create_from_png(filename);
 	if (cairo_surface_status(tabData->image) != CAIRO_STATUS_SUCCESS) {
@@ -735,9 +759,6 @@ gint InsertImage(GtkWidget *drawing_area_alignment, char *filename,
 
 	tabData->XSize = cairo_image_surface_get_width(tabData->image);
 	tabData->YSize = cairo_image_surface_get_height(tabData->image);
-
-	sprintf(buf, Window_Title, filename); /* Print window title in buffer */
-	gtk_window_set_title(GTK_WINDOW (window), buf); /* Set window title */
 
 	mScale = -1;
 	if (maxX != -1 && maxY != -1) {
@@ -842,32 +863,8 @@ static void update_preview_cb(GtkFileChooser *file_chooser, gpointer data) {
 	gtk_file_chooser_set_preview_widget_active(file_chooser, have_preview);
 }
 
-int allocateTabMemory(struct TabData ***tabsData, gint newTabNumber) {
-	static gint maxNumTabs = 0;
-	static gint numTabsAllocated = 0;
-
-	if (*tabsData == NULL) {
-		*tabsData = malloc(sizeof(struct TabData *) * MAXNUMTABS);
-		if (*tabsData == NULL) {
-			return FALSE;
-		}
-		maxNumTabs = MAXNUMTABS;
-	}
-	if (newTabNumber >= maxNumTabs) {
-		maxNumTabs += MAXNUMTABS;
-		*tabsData = realloc(*tabsData, sizeof(struct TabData *) * MAXNUMTABS);
-		if (*tabsData == NULL) {
-			return FALSE;
-		}
-	}
-	if (newTabNumber >= numTabsAllocated) {
-		(*tabsData)[newTabNumber] = malloc(sizeof(struct TabData));
-		if ((*tabsData)[newTabNumber] == NULL) {
-			return FALSE;
-		}
-		numTabsAllocated++;
-	}
-	return TRUE;
+struct TabData * allocateTabMemory() {
+	return (struct TabData *) malloc(sizeof(struct TabData));
 }
 
 /****************************************************************/
@@ -898,10 +895,9 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gboolean FileInCwd;
 	static gint NumberOfTabs = 0;
 
-	// Declaration of tab specific data structure
-	static struct TabData **allTabsData = NULL;
+	struct TabData *tabData;
 
-	if (!allocateTabMemory(&allTabsData, NumberOfTabs)) {
+	if ((tabData = allocateTabMemory()) == NULL) {
 		dialog = gtk_message_dialog_new(GTK_WINDOW(window), /* Notify user of the error */
 		GTK_DIALOG_DESTROY_WITH_PARENT, /* with a dialog */
 		GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE,
@@ -932,128 +928,102 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 		return -1;
 	}
 
+	g_object_set_data(G_OBJECT(table), DATA_STORE_NAME, (gpointer) tabData);
+
 	if (TempCoords != NULL) {
-		allTabsData[TabNum]->realcoords[0] = TempCoords[0];
-		allTabsData[TabNum]->realcoords[2] = TempCoords[1];
-		allTabsData[TabNum]->realcoords[1] = TempCoords[2];
-		allTabsData[TabNum]->realcoords[3] = TempCoords[3];
+		tabData->realcoords[0] = TempCoords[0];
+		tabData->realcoords[2] = TempCoords[1];
+		tabData->realcoords[1] = TempCoords[2];
+		tabData->realcoords[3] = TempCoords[3];
 	}
 	if (Uselogxy != NULL) {
-		allTabsData[TabNum]->logxy[0] = Uselogxy[0];
-		allTabsData[TabNum]->logxy[1] = Uselogxy[1];
+		tabData->logxy[0] = Uselogxy[0];
+		tabData->logxy[1] = Uselogxy[1];
 	}
 	if (UseError != NULL) {
-		allTabsData[TabNum]->UseErrors = *UseError;
+		tabData->UseErrors = *UseError;
 	} else {
-		allTabsData[TabNum]->UseErrors = FALSE;
+		tabData->UseErrors = FALSE;
 	}
 
 	/* Init datastructures */
 
-	allTabsData[TabNum]->bpressed[0] = FALSE;
-	allTabsData[TabNum]->bpressed[1] = FALSE;
-	allTabsData[TabNum]->bpressed[2] = FALSE;
-	allTabsData[TabNum]->bpressed[3] = FALSE;
+	tabData->bpressed[0] = FALSE;
+	tabData->bpressed[1] = FALSE;
+	tabData->bpressed[2] = FALSE;
+	tabData->bpressed[3] = FALSE;
 
-	allTabsData[TabNum]->valueset[0] = FALSE;
-	allTabsData[TabNum]->valueset[1] = FALSE;
-	allTabsData[TabNum]->valueset[2] = FALSE;
-	allTabsData[TabNum]->valueset[3] = FALSE;
+	tabData->valueset[0] = FALSE;
+	tabData->valueset[1] = FALSE;
+	tabData->valueset[2] = FALSE;
+	tabData->valueset[3] = FALSE;
 
-	allTabsData[TabNum]->numpoints = 0;
-	allTabsData[TabNum]->numlastpoints = 0;
-	allTabsData[TabNum]->ordering = 0;
+	tabData->numpoints = 0;
+	tabData->numlastpoints = 0;
+	tabData->ordering = 0;
 
-	allTabsData[TabNum]->mousePointerCoords[0] = -1;
-	allTabsData[TabNum]->mousePointerCoords[1] = -1;
+	tabData->mousePointerCoords[0] = -1;
+	tabData->mousePointerCoords[1] = -1;
 
-	allTabsData[TabNum]->logxy[0] = FALSE;
-	allTabsData[TabNum]->logxy[1] = FALSE;
+	tabData->logxy[0] = FALSE;
+	tabData->logxy[1] = FALSE;
 
-	allTabsData[TabNum]->MaxPoints = MAXPOINTS;
+	tabData->MaxPoints = MAXPOINTS;
 
-	allTabsData[TabNum]->setxypressed[0] = FALSE;
-	allTabsData[TabNum]->setxypressed[1] = FALSE;
-	allTabsData[TabNum]->setxypressed[2] = FALSE;
-	allTabsData[TabNum]->setxypressed[3] = FALSE;
+	tabData->setxypressed[0] = FALSE;
+	tabData->setxypressed[1] = FALSE;
+	tabData->setxypressed[2] = FALSE;
+	tabData->setxypressed[3] = FALSE;
 
-	allTabsData[TabNum]->lastpoints = (gint *) malloc(
-			sizeof(gint) * (allTabsData[TabNum]->MaxPoints + 4));
-	if (allTabsData[TabNum]->lastpoints == NULL) {
-		printf("Error allocating memory for lastpoints. Exiting.\n");
-		return -1;
-	}
-	allTabsData[TabNum]->points = (void *) malloc(
-			sizeof(gint *) * allTabsData[TabNum]->MaxPoints);
-	if (allTabsData[TabNum]->points == NULL) {
-		printf("Error allocating memory for points. Exiting.\n");
-		return -1;
-	}
-	for (i = 0; i < allTabsData[TabNum]->MaxPoints; i++) {
-		allTabsData[TabNum]->points[i] = (gint *) malloc(sizeof(gint) * 2);
-		if (allTabsData[TabNum]->points[i] == NULL) {
-			printf("Error allocating memory for points[%d]. Exiting.\n", i);
-			return -1;
-		}
-	}
+	tabData->lastpoints = NULL;
 
 	g_signal_connect (G_OBJECT (table), "key_press_event",
-			G_CALLBACK (key_press_event), allTabsData[TabNum]);
+			G_CALLBACK (key_press_event), tabData);
 	g_signal_connect (G_OBJECT (table), "key_release_event",
-			G_CALLBACK (key_release_event), allTabsData[TabNum]);
+			G_CALLBACK (key_release_event), tabData);
 
 	for (i = 0; i < 4; i++) {
-		allTabsData[TabNum]->xyentry[i] = gtk_entry_new(); /* Create text entry */
-		gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->xyentry[i]),
-				20);
-		gtk_editable_set_editable(
-				(GtkEditable *) allTabsData[TabNum]->xyentry[i], FALSE);
-		gtk_widget_set_sensitive(allTabsData[TabNum]->xyentry[i], FALSE); /* Inactivate it */
+		tabData->xyentry[i] = gtk_entry_new(); /* Create text entry */
+		gtk_entry_set_max_length(GTK_ENTRY (tabData->xyentry[i]), 20);
+		gtk_editable_set_editable((GtkEditable *) tabData->xyentry[i], FALSE);
+		gtk_widget_set_sensitive(tabData->xyentry[i], FALSE); /* Inactivate it */
 		struct ButtonData *buttonData;
 		buttonData = malloc(sizeof(struct ButtonData));
-		buttonData->tabData = allTabsData[TabNum];
+		buttonData->tabData = tabData;
 		buttonData->index = i;
-		g_signal_connect (G_OBJECT (allTabsData[TabNum]->xyentry[i]), "changed", /* Init the entry to call */
+		g_signal_connect (G_OBJECT (tabData->xyentry[i]), "changed", /* Init the entry to call */
 				G_CALLBACK (read_xy_entry), buttonData); /* read_x1_entry whenever */
-		gtk_widget_set_tooltip_text(allTabsData[TabNum]->xyentry[i],
-				entryxytt[i]);
+		gtk_widget_set_tooltip_text(tabData->xyentry[i], entryxytt[i]);
 	}
 
 	x_label = gtk_label_new(x_string);
 	y_label = gtk_label_new(y_string);
-	allTabsData[TabNum]->xc_entry = gtk_entry_new(); /* Create text entry */
-	gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->xc_entry), 16);
-	gtk_editable_set_editable((GtkEditable *) allTabsData[TabNum]->xc_entry,
-			FALSE);
-	allTabsData[TabNum]->yc_entry = gtk_entry_new(); /* Create text entry */
-	gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->yc_entry), 16);
-	gtk_editable_set_editable((GtkEditable *) allTabsData[TabNum]->yc_entry,
-			FALSE);
+	tabData->xc_entry = gtk_entry_new(); /* Create text entry */
+	gtk_entry_set_max_length(GTK_ENTRY (tabData->xc_entry), 16);
+	gtk_editable_set_editable((GtkEditable *) tabData->xc_entry, FALSE);
+	tabData->yc_entry = gtk_entry_new(); /* Create text entry */
+	gtk_entry_set_max_length(GTK_ENTRY (tabData->yc_entry), 16);
+	gtk_editable_set_editable((GtkEditable *) tabData->yc_entry, FALSE);
 
 	pm_label = gtk_label_new(pm_string);
 	pm_label2 = gtk_label_new(pm_string);
-	allTabsData[TabNum]->xerr_entry = gtk_entry_new(); /* Create text entry */
-	gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->xerr_entry), 16);
-	gtk_editable_set_editable((GtkEditable *) allTabsData[TabNum]->xerr_entry,
-			FALSE);
-	allTabsData[TabNum]->yerr_entry = gtk_entry_new(); /* Create text entry */
-	gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->yerr_entry), 16);
-	gtk_editable_set_editable((GtkEditable *) allTabsData[TabNum]->yerr_entry,
-			FALSE);
+	tabData->xerr_entry = gtk_entry_new(); /* Create text entry */
+	gtk_entry_set_max_length(GTK_ENTRY (tabData->xerr_entry), 16);
+	gtk_editable_set_editable((GtkEditable *) tabData->xerr_entry, FALSE);
+	tabData->yerr_entry = gtk_entry_new(); /* Create text entry */
+	gtk_entry_set_max_length(GTK_ENTRY (tabData->yerr_entry), 16);
+	gtk_editable_set_editable((GtkEditable *) tabData->yerr_entry, FALSE);
 
 	nump_label = gtk_label_new(nump_string);
-	allTabsData[TabNum]->nump_entry = gtk_entry_new(); /* Create text entry */
-	gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->nump_entry), 10);
-	gtk_editable_set_editable((GtkEditable *) allTabsData[TabNum]->nump_entry,
-			FALSE);
-	SetNumPointsEntry(allTabsData[TabNum]->nump_entry,
-			allTabsData[TabNum]->numpoints);
+	tabData->nump_entry = gtk_entry_new(); /* Create text entry */
+	gtk_entry_set_max_length(GTK_ENTRY (tabData->nump_entry), 10);
+	gtk_editable_set_editable((GtkEditable *) tabData->nump_entry, FALSE);
+	SetNumPointsEntry(tabData->nump_entry, tabData->numpoints);
 
-	allTabsData[TabNum]->zoom_area = gtk_drawing_area_new(); /* Create new drawing area */
-	gtk_widget_set_size_request(allTabsData[TabNum]->zoom_area, ZOOMPIXSIZE,
-			ZOOMPIXSIZE);
-	g_signal_connect (G_OBJECT (allTabsData[TabNum]->zoom_area), "draw",
-			G_CALLBACK (draw_zoom_callback), allTabsData[TabNum]);
+	tabData->zoom_area = gtk_drawing_area_new(); /* Create new drawing area */
+	gtk_widget_set_size_request(tabData->zoom_area, ZOOMPIXSIZE, ZOOMPIXSIZE);
+	g_signal_connect (G_OBJECT (tabData->zoom_area), "draw",
+			G_CALLBACK (draw_zoom_callback), tabData);
 
 	for (i = 0; i < 4; i++) {
 		xy_label[i] = gtk_label_new(NULL);
@@ -1063,44 +1033,40 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	for (i = 0; i < 4; i++) {
 		tmplabel = gtk_label_new(NULL);
 		gtk_label_set_markup_with_mnemonic((GtkLabel *) tmplabel, setxylabel[i]);
-		allTabsData[TabNum]->setxybutton[i] = gtk_toggle_button_new(); /* Create button */
-		gtk_container_add((GtkContainer *) allTabsData[TabNum]->setxybutton[i],
-				tmplabel);
+		tabData->setxybutton[i] = gtk_toggle_button_new(); /* Create button */
+		gtk_container_add((GtkContainer *) tabData->setxybutton[i], tmplabel);
 		struct ButtonData *buttonData;
 		buttonData = malloc(sizeof(struct ButtonData));
-		buttonData->tabData = allTabsData[TabNum];
+		buttonData->tabData = tabData;
 		buttonData->index = i;
-		g_signal_connect (G_OBJECT (allTabsData[TabNum]->setxybutton[i]), "toggled", /* Connect button */
+		g_signal_connect (G_OBJECT (tabData->setxybutton[i]), "toggled", /* Connect button */
 				G_CALLBACK (toggle_xy), buttonData);
-		gtk_widget_set_tooltip_text(allTabsData[TabNum]->setxybutton[i],
-				setxytts[i]);
+		gtk_widget_set_tooltip_text(tabData->setxybutton[i], setxytts[i]);
 	}
 
-	allTabsData[TabNum]->remlastbutton = gtk_button_new_with_mnemonic(
-			RemLastBLabel); /* Create button */
-	g_signal_connect (G_OBJECT (allTabsData[TabNum]->remlastbutton), "clicked", /* Connect button */
-			G_CALLBACK (remove_last), allTabsData[TabNum]);
-	gtk_widget_set_sensitive(allTabsData[TabNum]->remlastbutton, FALSE);
-	gtk_widget_set_tooltip_text(allTabsData[TabNum]->remlastbutton, removeltt);
+	tabData->remlastbutton = gtk_button_new_with_mnemonic(RemLastBLabel); /* Create button */
+	g_signal_connect (G_OBJECT (tabData->remlastbutton), "clicked", /* Connect button */
+			G_CALLBACK (remove_last), tabData);
+	gtk_widget_set_sensitive(tabData->remlastbutton, FALSE);
+	gtk_widget_set_tooltip_text(tabData->remlastbutton, removeltt);
 
-	allTabsData[TabNum]->remallbutton = gtk_button_new_with_mnemonic(
-			RemAllBLabel); /* Create button */
-	g_signal_connect (G_OBJECT (allTabsData[TabNum]->remallbutton), "clicked", /* Connect button */
-			G_CALLBACK (remove_all), allTabsData[TabNum]);
-	gtk_widget_set_sensitive(allTabsData[TabNum]->remallbutton, FALSE);
-	gtk_widget_set_tooltip_text(allTabsData[TabNum]->remallbutton, removeatts);
+	tabData->remallbutton = gtk_button_new_with_mnemonic(RemAllBLabel); /* Create button */
+	g_signal_connect (G_OBJECT (tabData->remallbutton), "clicked", /* Connect button */
+			G_CALLBACK (remove_all), tabData);
+	gtk_widget_set_sensitive(tabData->remallbutton, FALSE);
+	gtk_widget_set_tooltip_text(tabData->remallbutton, removeatts);
 
 	for (i = 0; i < 2; i++) {
 		logcheckb[i] = gtk_check_button_new_with_mnemonic(loglabel[i]); /* Create check button */
 		struct ButtonData *buttonData;
 		buttonData = malloc(sizeof(struct ButtonData));
-		buttonData->tabData = allTabsData[TabNum];
+		buttonData->tabData = tabData;
 		buttonData->index = i;
 		g_signal_connect (G_OBJECT (logcheckb[i]), "toggled", /* Connect button */
 				G_CALLBACK (islogxy), buttonData);
 		gtk_widget_set_tooltip_text(logcheckb[i], logxytt[i]);
 		gtk_toggle_button_set_active((GtkToggleButton *) logcheckb[i],
-				allTabsData[TabNum]->logxy[i]);
+				tabData->logxy[i]);
 	}
 
 	tophbox = gtk_hbox_new(FALSE, SECT_SEP);
@@ -1127,12 +1093,12 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_table_set_col_spacings(GTK_TABLE(table), ELEM_SEP);
 	gtk_box_pack_start(GTK_BOX (tlvbox), fixed, FALSE, FALSE, 0);
 	for (i = 0; i < 4; i++) {
-		gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->setxybutton[i],
-				0, 1, i, i + 1, 5, 0, 0, 0);
+		gtk_table_attach(GTK_TABLE(table), tabData->setxybutton[i], 0, 1, i,
+				i + 1, 5, 0, 0, 0);
 		gtk_table_attach(GTK_TABLE(table), xy_label[i], 1, 2, i, i + 1, 0, 0,
 				0, 0);
-		gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->xyentry[i], 2,
-				3, i, i + 1, 0, 0, 0, 0);
+		gtk_table_attach(GTK_TABLE(table), tabData->xyentry[i], 2, 3, i, i + 1,
+				0, 0, 0, 0);
 	}
 
 	trvbox = gtk_vbox_new(FALSE, ELEM_SEP);
@@ -1151,17 +1117,17 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_fixed_put((GtkFixed *) fixed, table, FRAME_INDENT, 0);
 	gtk_box_pack_start(GTK_BOX (trvbox), fixed, FALSE, FALSE, 0);
 	gtk_table_attach(GTK_TABLE(table), x_label, 0, 1, 0, 1, 0, 0, 0, 0);
-	gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->xc_entry, 1, 2, 0,
-			1, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(table), tabData->xc_entry, 1, 2, 0, 1, 0, 0, 0,
+			0);
 	gtk_table_attach(GTK_TABLE(table), pm_label, 2, 3, 0, 1, 0, 0, 0, 0);
-	gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->xerr_entry, 3, 4,
-			0, 1, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(table), tabData->xerr_entry, 3, 4, 0, 1, 0, 0,
+			0, 0);
 	gtk_table_attach(GTK_TABLE(table), y_label, 0, 1, 1, 2, 0, 0, 0, 0);
-	gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->yc_entry, 1, 2, 1,
-			2, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(table), tabData->yc_entry, 1, 2, 1, 2, 0, 0, 0,
+			0);
 	gtk_table_attach(GTK_TABLE(table), pm_label2, 2, 3, 1, 2, 0, 0, 0, 0);
-	gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->yerr_entry, 3, 4,
-			1, 2, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(table), tabData->yerr_entry, 3, 4, 1, 2, 0, 0,
+			0, 0);
 
 	table = gtk_table_new(3, 1, FALSE);
 	gtk_table_set_row_spacings(GTK_TABLE(table), 6);
@@ -1172,21 +1138,21 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	alignment = gtk_alignment_new(0, 1, 0, 0);
 	gtk_container_add((GtkContainer *) alignment, nump_label);
 	gtk_table_attach(GTK_TABLE(table), alignment, 0, 1, 0, 1, 0, 0, 0, 0);
-	gtk_table_attach(GTK_TABLE(table), allTabsData[TabNum]->nump_entry, 1, 2,
-			0, 1, 0, 0, 0, 0);
+	gtk_table_attach(GTK_TABLE(table), tabData->nump_entry, 1, 2, 0, 1, 0, 0,
+			0, 0);
 
 	blvbox = gtk_vbox_new(FALSE, GROUP_SEP);
 	gtk_box_pack_start(GTK_BOX (bottomhbox), blvbox, FALSE, FALSE, ELEM_SEP);
 
 	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX (subvbox), allTabsData[TabNum]->remlastbutton,
-			FALSE, FALSE, 0); /* Pack button in vert. box */
-	gtk_box_pack_start(GTK_BOX (subvbox), allTabsData[TabNum]->remallbutton,
-			FALSE, FALSE, 0); /* Pack button in vert. box */
+	gtk_box_pack_start(GTK_BOX (subvbox), tabData->remlastbutton, FALSE, FALSE,
+			0); /* Pack button in vert. box */
+	gtk_box_pack_start(GTK_BOX (subvbox), tabData->remallbutton, FALSE, FALSE,
+			0); /* Pack button in vert. box */
 
 	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
-	allTabsData[TabNum]->zoomareabox = subvbox;
+	tabData->zoomareabox = subvbox;
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	ZAlabel = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL (ZAlabel), ZAheader);
@@ -1194,12 +1160,11 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_container_add((GtkContainer *) alignment, ZAlabel);
 	gtk_box_pack_start(GTK_BOX (subvbox), alignment, FALSE, FALSE, 0);
 	fixed = gtk_fixed_new();
-	gtk_fixed_put((GtkFixed *) fixed, allTabsData[TabNum]->zoom_area,
-			FRAME_INDENT, 0);
+	gtk_fixed_put((GtkFixed *) fixed, tabData->zoom_area, FRAME_INDENT, 0);
 	gtk_box_pack_start(GTK_BOX (subvbox), fixed, FALSE, FALSE, 0);
 
 	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
-	allTabsData[TabNum]->logbox = subvbox;
+	tabData->logbox = subvbox;
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	Llabel = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL (Llabel), Lheader);
@@ -1217,7 +1182,7 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 		ordercheckb[i] = gtk_radio_button_new_with_label(group, orderlabel[i]); /* Create radio button */
 		struct ButtonData *buttonData;
 		buttonData = malloc(sizeof(struct ButtonData));
-		buttonData->tabData = allTabsData[TabNum];
+		buttonData->tabData = tabData;
 		buttonData->index = i;
 		g_signal_connect (G_OBJECT (ordercheckb[i]), "toggled", /* Connect button */
 				G_CALLBACK (SetOrdering), buttonData);
@@ -1226,7 +1191,7 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON (ordercheckb[0]), TRUE); /* Set no ordering button active */
 
 	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
-	allTabsData[TabNum]->oppropbox = subvbox;
+	tabData->oppropbox = subvbox;
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	Olabel = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL (Olabel), Oheader);
@@ -1241,10 +1206,10 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 
 	UseErrCheckB = gtk_check_button_new_with_mnemonic(PrintErrCBLabel);
 	g_signal_connect (G_OBJECT (UseErrCheckB), "toggled",
-			G_CALLBACK (UseErrCB), allTabsData[TabNum]);
+			G_CALLBACK (UseErrCB), tabData);
 	gtk_widget_set_tooltip_text(UseErrCheckB, uetts);
 	gtk_toggle_button_set_active((GtkToggleButton *) UseErrCheckB,
-			allTabsData[TabNum]->UseErrors);
+			tabData->UseErrors);
 
 	Elabel = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL (Elabel), Eheader);
@@ -1263,7 +1228,7 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 				= gtk_radio_button_new_with_label(group, actionlabel[i]); /* Create radio button */
 		struct ButtonData *buttonData;
 		buttonData = malloc(sizeof(struct ButtonData));
-		buttonData->tabData = allTabsData[TabNum];
+		buttonData->tabData = tabData;
 		buttonData->index = i;
 		g_signal_connect (G_OBJECT (actioncheckb[i]), "toggled", /* Connect button */
 				G_CALLBACK (SetAction), buttonData);
@@ -1282,110 +1247,100 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 		gtk_box_pack_start(GTK_BOX (subvbox), fixed, FALSE, FALSE, 0);
 	}
 
-	allTabsData[TabNum]->file_entry = gtk_entry_new(); /* Create text entry */
-	gtk_entry_set_max_length(GTK_ENTRY (allTabsData[TabNum]->file_entry), 256);
-	gtk_editable_set_editable((GtkEditable *) allTabsData[TabNum]->file_entry,
-			TRUE);
-	g_signal_connect (G_OBJECT (allTabsData[TabNum]->file_entry), "changed", /* Init the entry to call */
-			G_CALLBACK (read_file_entry), allTabsData[TabNum]);
-	gtk_widget_set_tooltip_text(allTabsData[TabNum]->file_entry, filenamett);
+	tabData->file_entry = gtk_entry_new(); /* Create text entry */
+	gtk_entry_set_max_length(GTK_ENTRY (tabData->file_entry), 256);
+	gtk_editable_set_editable((GtkEditable *) tabData->file_entry, TRUE);
+	g_signal_connect (G_OBJECT (tabData->file_entry), "changed", /* Init the entry to call */
+			G_CALLBACK (read_file_entry), tabData);
+	gtk_widget_set_tooltip_text(tabData->file_entry, filenamett);
 
 	if (FileInCwd) {
 		snprintf(buf2, 256, "%s.dat", basename(filename));
-		strncpy(allTabsData[TabNum]->FileNames, basename(filename), 256);
+		strncpy(tabData->FileNames, basename(filename), 256);
 	} else {
 		snprintf(buf2, 256, "%s.dat", filename);
-		strncpy(allTabsData[TabNum]->FileNames, filename, 256);
+		strncpy(tabData->FileNames, filename, 256);
 	}
 
-	snprintf(buf, 256, Window_Title, allTabsData[TabNum]->FileNames); /* Print window title in buffer */
+	snprintf(buf, 256, Window_Title, tabData->FileNames); /* Print window title in buffer */
 	gtk_window_set_title(GTK_WINDOW (window), buf); /* Set window title */
 
 	fixed = gtk_fixed_new();
-	gtk_fixed_put((GtkFixed *) fixed, allTabsData[TabNum]->file_entry,
-			FRAME_INDENT, 0);
+	gtk_fixed_put((GtkFixed *) fixed, tabData->file_entry, FRAME_INDENT, 0);
 	gtk_box_pack_start(GTK_BOX (subvbox), fixed, FALSE, FALSE, 0);
-	gtk_widget_set_sensitive(allTabsData[TabNum]->file_entry, FALSE);
+	gtk_widget_set_sensitive(tabData->file_entry, FALSE);
 
-	allTabsData[TabNum]->exportbutton = gtk_button_new_with_mnemonic(
-			PrintBLabel); /* Create button */
+	tabData->exportbutton = gtk_button_new_with_mnemonic(PrintBLabel); /* Create button */
 
-	gtk_box_pack_start(GTK_BOX (subvbox), allTabsData[TabNum]->exportbutton,
-			FALSE, FALSE, 0);
-	gtk_widget_set_sensitive(allTabsData[TabNum]->exportbutton, FALSE);
+	gtk_box_pack_start(GTK_BOX (subvbox), tabData->exportbutton, FALSE, FALSE,
+			0);
+	gtk_widget_set_sensitive(tabData->exportbutton, FALSE);
 
-	g_signal_connect (G_OBJECT (allTabsData[TabNum]->exportbutton), "clicked",
-			G_CALLBACK (print_results), allTabsData[TabNum]);
-	gtk_widget_set_tooltip_text(allTabsData[TabNum]->exportbutton, printrestt);
+	g_signal_connect (G_OBJECT (tabData->exportbutton), "clicked",
+			G_CALLBACK (print_results), tabData);
+	gtk_widget_set_tooltip_text(tabData->exportbutton, printrestt);
 
 	brvbox = gtk_vbox_new(FALSE, GROUP_SEP);
 	gtk_box_pack_start(GTK_BOX (bottomhbox), brvbox, TRUE, TRUE, 0);
 
-	gtk_entry_set_text(GTK_ENTRY (allTabsData[TabNum]->file_entry), buf2); /* Set text of text entry to filename */
+	gtk_entry_set_text(GTK_ENTRY (tabData->file_entry), buf2); /* Set text of text entry to filename */
 
 	ScrollWindow = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy((GtkScrolledWindow *) ScrollWindow,
 			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	allTabsData[TabNum]->ViewPort = gtk_viewport_new(NULL, NULL);
+	tabData->ViewPort = gtk_viewport_new(NULL, NULL);
 
 	gtk_box_pack_start(GTK_BOX (brvbox), ScrollWindow, TRUE, TRUE, 0);
 	drawing_area_alignment = gtk_alignment_new(0, 0, 0, 0);
-	gtk_container_add(GTK_CONTAINER (allTabsData[TabNum]->ViewPort),
-			drawing_area_alignment);
-	gtk_container_add(GTK_CONTAINER (ScrollWindow),
-			allTabsData[TabNum]->ViewPort);
+	gtk_container_add(GTK_CONTAINER (tabData->ViewPort), drawing_area_alignment);
+	gtk_container_add(GTK_CONTAINER (ScrollWindow), tabData->ViewPort);
 
 	gtk_widget_show_all(window);
 
 	gtk_notebook_set_current_page((GtkNotebook *) mainnotebook, TabNum);
 
 	if (InsertImage(drawing_area_alignment, filename, Scale, maxX, maxY,
-			allTabsData[TabNum]) == -1) {
+			tabData) == -1) {
 		gtk_notebook_remove_page((GtkNotebook *) mainnotebook, TabNum);
 		return -1;
 	}
 
 	if (UsePreSetCoords) {
-		allTabsData[TabNum]->axiscoords[0][0] = 0;
-		allTabsData[TabNum]->axiscoords[0][1] = allTabsData[TabNum]->YSize - 1;
-		allTabsData[TabNum]->axiscoords[1][0] = allTabsData[TabNum]->XSize - 1;
-		allTabsData[TabNum]->axiscoords[1][1] = allTabsData[TabNum]->YSize - 1;
-		allTabsData[TabNum]->axiscoords[2][0] = 0;
-		allTabsData[TabNum]->axiscoords[2][1] = allTabsData[TabNum]->YSize - 1;
-		allTabsData[TabNum]->axiscoords[3][0] = 0;
-		allTabsData[TabNum]->axiscoords[3][1] = 0;
+		allocatePointData(tabData);
+		tabData->axiscoords[0][0] = 0;
+		tabData->axiscoords[0][1] = tabData->YSize - 1;
+		tabData->axiscoords[1][0] = tabData->XSize - 1;
+		tabData->axiscoords[1][1] = tabData->YSize - 1;
+		tabData->axiscoords[2][0] = 0;
+		tabData->axiscoords[2][1] = tabData->YSize - 1;
+		tabData->axiscoords[3][0] = 0;
+		tabData->axiscoords[3][1] = 0;
 		for (i = 0; i < 4; i++) {
-			gtk_widget_set_sensitive(allTabsData[TabNum]->xyentry[i], TRUE);
-			gtk_editable_set_editable(
-					(GtkEditable *) allTabsData[TabNum]->xyentry[i], TRUE);
-			sprintf(buf, "%lf", allTabsData[TabNum]->realcoords[i]);
-			gtk_entry_set_text((GtkEntry *) allTabsData[TabNum]->xyentry[i],
-					buf);
-			allTabsData[TabNum]->lastpoints[allTabsData[TabNum]->numlastpoints]
-					= -(i + 1);
-			allTabsData[TabNum]->numlastpoints++;
-			allTabsData[TabNum]->valueset[i] = TRUE;
-			allTabsData[TabNum]->bpressed[i] = TRUE;
-			allTabsData[TabNum]->setxypressed[i] = FALSE;
+			gtk_widget_set_sensitive(tabData->xyentry[i], TRUE);
+			gtk_editable_set_editable((GtkEditable *) tabData->xyentry[i], TRUE);
+			sprintf(buf, "%lf", tabData->realcoords[i]);
+			gtk_entry_set_text((GtkEntry *) tabData->xyentry[i], buf);
+			tabData->lastpoints[tabData->numlastpoints] = -(i + 1);
+			tabData->numlastpoints++;
+			tabData->valueset[i] = TRUE;
+			tabData->bpressed[i] = TRUE;
+			tabData->setxypressed[i] = FALSE;
 		}
-		gtk_widget_set_sensitive(allTabsData[TabNum]->exportbutton, TRUE);
+		gtk_widget_set_sensitive(tabData->exportbutton, TRUE);
 	}
 
 	gtk_action_group_set_sensitive(tab_action_group, TRUE);
-//	NoteBookNumPages++;
 
+	// Check if any widget have been hidden, and hide if that is the case
 	if (HideZoomArea)
-		for (i = 0; i < MAXNUMTABS; i++)
-			if (allTabsData[i]->zoomareabox != NULL)
-				gtk_widget_hide(allTabsData[i]->zoomareabox);
+		if (tabData->zoomareabox != NULL)
+			gtk_widget_hide(tabData->zoomareabox);
 	if (HideLog)
-		for (i = 0; i < MAXNUMTABS; i++)
-			if (allTabsData[i]->logbox != NULL)
-				gtk_widget_hide(allTabsData[i]->logbox);
+		if (tabData->logbox != NULL)
+			gtk_widget_hide(tabData->logbox);
 	if (HideOpProp)
-		for (i = 0; i < MAXNUMTABS; i++)
-			if (allTabsData[i]->oppropbox != NULL)
-				gtk_widget_hide(allTabsData[i]->oppropbox);
+		if (tabData->oppropbox != NULL)
+			gtk_widget_hide(tabData->oppropbox);
 
 	return 0;
 }
@@ -1537,10 +1492,17 @@ GCallback menu_help_about(void) {
 /* destroyed.							*/
 /****************************************************************/
 GCallback menu_tab_close(void) {
-	gtk_notebook_remove_page((GtkNotebook *) mainnotebook,
-			gtk_notebook_get_current_page((GtkNotebook *) mainnotebook)); /* This appearently takes care of everything */
+	gint page_num = gtk_notebook_get_current_page((GtkNotebook *) mainnotebook);
 
-//	NoteBookNumPages--;
+	struct TabData *tabData;
+	tabData = (struct TabData *) g_object_get_data(
+			G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *) mainnotebook,
+							page_num)), DATA_STORE_NAME);
+
+	gtk_notebook_remove_page((GtkNotebook *) mainnotebook, page_num); /* This appearently takes care of everything */
+
+//	printf("Freeing memory for tab %s\n", tabData->FileNames);
+	free(tabData);
 
 	if (gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook) == 0)
 		gtk_action_group_set_sensitive(tab_action_group, FALSE);
@@ -1554,10 +1516,8 @@ GCallback menu_tab_close(void) {
 GCallback full_screen_action_callback(GtkWidget *widget, gpointer func_data) {
 	if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
 		gtk_window_fullscreen(GTK_WINDOW (window));
-//		WinFullScreen = TRUE;
 	} else {
 		gtk_window_unfullscreen(GTK_WINDOW (window));
-//		WinFullScreen = FALSE;
 	}
 	return NULL;
 }
@@ -1567,18 +1527,21 @@ GCallback full_screen_action_callback(GtkWidget *widget, gpointer func_data) {
 /****************************************************************/
 GCallback hide_zoom_area_callback(GtkWidget *widget, gpointer func_data) {
 	int i;
+	struct TabData *tabData;
 
-	if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
-		for (i = 0; i < MAXNUMTABS; i++)
-			//			if (allTabsData[i]->zoomareabox != NULL)
-			//				gtk_widget_hide(allTabsData[i]->zoomareabox);
-			HideZoomArea = TRUE;
-	} else {
-		for (i = 0; i < MAXNUMTABS; i++)
-			//			if (allTabsData[i]->zoomareabox != NULL)
-			//				gtk_widget_show(allTabsData[i]->zoomareabox);
-			HideZoomArea = FALSE;
+	for (i = 0; i < gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook); i++) {
+		tabData
+				= (struct TabData *) g_object_get_data(
+						G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *) mainnotebook,
+										i)), DATA_STORE_NAME);
+		if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
+			gtk_widget_hide(tabData->zoomareabox);
+		} else {
+			gtk_widget_show(tabData->zoomareabox);
+		}
 	}
+	HideZoomArea = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget));
+
 	return NULL;
 }
 
@@ -1587,18 +1550,21 @@ GCallback hide_zoom_area_callback(GtkWidget *widget, gpointer func_data) {
 /****************************************************************/
 GCallback hide_axis_settings_callback(GtkWidget *widget, gpointer func_data) {
 	int i;
+	struct TabData *tabData;
 
-	if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
-		for (i = 0; i < MAXNUMTABS; i++)
-			//			if (allTabsData[i]->logbox != NULL)
-			//				gtk_widget_hide(allTabsData[i]->logbox);
-			HideLog = TRUE;
-	} else {
-		for (i = 0; i < MAXNUMTABS; i++)
-			//			if (allTabsData[i]->logbox != NULL)
-			//				gtk_widget_show(allTabsData[i]->logbox);
-			HideLog = FALSE;
+	for (i = 0; i < gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook); i++) {
+		tabData
+				= (struct TabData *) g_object_get_data(
+						G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *) mainnotebook,
+										i)), DATA_STORE_NAME);
+		if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
+			gtk_widget_hide(tabData->logbox);
+		} else {
+			gtk_widget_show(tabData->logbox);
+		}
 	}
+	HideLog = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget));
+
 	return NULL;
 }
 
@@ -1607,18 +1573,21 @@ GCallback hide_axis_settings_callback(GtkWidget *widget, gpointer func_data) {
 /****************************************************************/
 GCallback hide_output_prop_callback(GtkWidget *widget, gpointer func_data) {
 	int i;
+	struct TabData *tabData;
 
-	if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
-		for (i = 0; i < MAXNUMTABS; i++)
-			//			if (allTabsData[i]->oppropbox != NULL)
-			//				gtk_widget_hide(allTabsData[i]->oppropbox);
-			HideOpProp = TRUE;
-	} else {
-		for (i = 0; i < MAXNUMTABS; i++)
-			//			if (allTabsData[i]->oppropbox != NULL)
-			//				gtk_widget_show(allTabsData[i]->oppropbox);
-			HideOpProp = FALSE;
+	for (i = 0; i < gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook); i++) {
+		tabData
+				= (struct TabData *) g_object_get_data(
+						G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *) mainnotebook,
+										i)), DATA_STORE_NAME);
+		if (gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget))) {
+			gtk_widget_hide(tabData->oppropbox);
+		} else {
+			gtk_widget_show(tabData->oppropbox);
+		}
 	}
+	HideOpProp = gtk_toggle_action_get_active(GTK_TOGGLE_ACTION(widget));
+
 	return NULL;
 }
 
@@ -1627,13 +1596,17 @@ GCallback hide_output_prop_callback(GtkWidget *widget, gpointer func_data) {
 /* It sets up the ViewedTabNum value as well as the title of	*/
 /* the window to match the image currently viewed.		*/
 /****************************************************************/
-GCallback NoteBookTabChange(GtkNotebook *notebook, gpointer page,
+GCallback NoteBookTabChange(GtkNotebook *notebook, GtkWidget *page,
 		guint page_num, gpointer user_data) {
 	gchar buf[256];
 
-	//	sprintf(buf, Window_Title, allTabsData[ViewedTabNum]->FileNames); /* Print window title in buffer */
-	gtk_window_set_title(GTK_WINDOW (window), buf); /* Set window title */
+	struct TabData *tabData;
+	tabData = (struct TabData *) g_object_get_data(G_OBJECT(page), DATA_STORE_NAME);
 
+	if (tabData != NULL) {
+		sprintf(buf, Window_Title, tabData->FileNames); /* Print window title in buffer */
+		gtk_window_set_title(GTK_WINDOW (window), buf); /* Set window title */
+	}
 	return NULL;
 }
 
@@ -1643,7 +1616,7 @@ GCallback NoteBookTabChange(GtkNotebook *notebook, gpointer page,
 /* spaces and initialized the main window and its widgets.	*/
 /****************************************************************/
 int main(int argc, char **argv) {
-	gint FileIndex[MAXNUMTABS], NumFiles = 0, i, maxX, maxY;
+	gint FileIndex[MAXNUMFILES], NumFiles = 0, i, maxX, maxY;
 	gdouble Scale;
 	gboolean UsePreSetCoords, UseError, Uselogxy[2];
 	gdouble TempCoords[4];
