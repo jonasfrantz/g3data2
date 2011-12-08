@@ -658,59 +658,64 @@ gint key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	GdkCursor *cursor;
 	struct TabData *tabData;
 
-	tabData = (struct TabData *) data;
+	if (gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook) > 0) {
+		tabData
+				= (struct TabData *) g_object_get_data(
+						G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *) mainnotebook,
+										gtk_notebook_get_current_page((GtkNotebook *) mainnotebook))),
+						DATA_STORE_NAME);
 
-	if (event->keyval == GDK_KEY_Left) {
-		adjustment = gtk_viewport_get_hadjustment(
-				(GtkViewport *) tabData->ViewPort);
-		adj_val = gtk_adjustment_get_value(adjustment);
-		adj_val -= gtk_adjustment_get_page_size(adjustment) / 10.0;
-		if (adj_val < gtk_adjustment_get_lower(adjustment))
-			adj_val = gtk_adjustment_get_lower(adjustment);
-		gtk_adjustment_set_value(adjustment, adj_val);
-		gtk_viewport_set_hadjustment((GtkViewport *) tabData->ViewPort,
-				adjustment);
-	} else if (event->keyval == GDK_KEY_Right) {
-		adjustment = gtk_viewport_get_hadjustment(
-				(GtkViewport *) tabData->ViewPort);
-		adj_val = gtk_adjustment_get_value(adjustment);
-		adj_val += gtk_adjustment_get_page_size(adjustment) / 10.0;
-		if (adj_val > (gtk_adjustment_get_upper(adjustment)
-				- gtk_adjustment_get_page_size(adjustment)))
-			adj_val = (gtk_adjustment_get_upper(adjustment)
-					- gtk_adjustment_get_page_size(adjustment));
-		gtk_adjustment_set_value(adjustment, adj_val);
-		gtk_viewport_set_hadjustment((GtkViewport *) tabData->ViewPort,
-				adjustment);
-	} else if (event->keyval == GDK_KEY_Up) {
-		adjustment = gtk_viewport_get_vadjustment(
-				(GtkViewport *) tabData->ViewPort);
-		adj_val = gtk_adjustment_get_value(adjustment);
-		adj_val -= gtk_adjustment_get_page_size(adjustment) / 10.0;
-		if (adj_val < gtk_adjustment_get_lower(adjustment))
-			adj_val = gtk_adjustment_get_lower(adjustment);
-		gtk_adjustment_set_value(adjustment, adj_val);
-		gtk_viewport_set_vadjustment((GtkViewport *) tabData->ViewPort,
-				adjustment);
-	} else if (event->keyval == GDK_KEY_Down) {
-		adjustment = gtk_viewport_get_vadjustment(
-				(GtkViewport *) tabData->ViewPort);
-		adj_val = gtk_adjustment_get_value(adjustment);
-		adj_val += gtk_adjustment_get_page_size(adjustment) / 10.0;
-		if (adj_val > (gtk_adjustment_get_upper(adjustment)
-				- gtk_adjustment_get_page_size(adjustment)))
-			adj_val = (gtk_adjustment_get_upper(adjustment)
-					- gtk_adjustment_get_page_size(adjustment));
-		gtk_adjustment_set_value(adjustment, adj_val);
-		gtk_viewport_set_vadjustment((GtkViewport *) tabData->ViewPort,
-				adjustment);
-	} else if (event->keyval == GDK_KEY_Control_L) {
-		cursor = gdk_cursor_new(GDK_HAND2);
-		gdk_window_set_cursor(
-				gtk_widget_get_parent_window(tabData->drawing_area), cursor);
-		MovePointMode = TRUE;
+		if (event->keyval == GDK_KEY_Left) {
+			adjustment = gtk_viewport_get_hadjustment(
+					(GtkViewport *) tabData->ViewPort);
+			adj_val = gtk_adjustment_get_value(adjustment);
+			adj_val -= gtk_adjustment_get_page_size(adjustment) / 10.0;
+			if (adj_val < gtk_adjustment_get_lower(adjustment))
+				adj_val = gtk_adjustment_get_lower(adjustment);
+			gtk_adjustment_set_value(adjustment, adj_val);
+			gtk_viewport_set_hadjustment((GtkViewport *) tabData->ViewPort,
+					adjustment);
+		} else if (event->keyval == GDK_KEY_Right) {
+			adjustment = gtk_viewport_get_hadjustment(
+					(GtkViewport *) tabData->ViewPort);
+			adj_val = gtk_adjustment_get_value(adjustment);
+			adj_val += gtk_adjustment_get_page_size(adjustment) / 10.0;
+			if (adj_val > (gtk_adjustment_get_upper(adjustment)
+					- gtk_adjustment_get_page_size(adjustment)))
+				adj_val = (gtk_adjustment_get_upper(adjustment)
+						- gtk_adjustment_get_page_size(adjustment));
+			gtk_adjustment_set_value(adjustment, adj_val);
+			gtk_viewport_set_hadjustment((GtkViewport *) tabData->ViewPort,
+					adjustment);
+		} else if (event->keyval == GDK_KEY_Up) {
+			adjustment = gtk_viewport_get_vadjustment(
+					(GtkViewport *) tabData->ViewPort);
+			adj_val = gtk_adjustment_get_value(adjustment);
+			adj_val -= gtk_adjustment_get_page_size(adjustment) / 10.0;
+			if (adj_val < gtk_adjustment_get_lower(adjustment))
+				adj_val = gtk_adjustment_get_lower(adjustment);
+			gtk_adjustment_set_value(adjustment, adj_val);
+			gtk_viewport_set_vadjustment((GtkViewport *) tabData->ViewPort,
+					adjustment);
+		} else if (event->keyval == GDK_KEY_Down) {
+			adjustment = gtk_viewport_get_vadjustment(
+					(GtkViewport *) tabData->ViewPort);
+			adj_val = gtk_adjustment_get_value(adjustment);
+			adj_val += gtk_adjustment_get_page_size(adjustment) / 10.0;
+			if (adj_val > (gtk_adjustment_get_upper(adjustment)
+					- gtk_adjustment_get_page_size(adjustment)))
+				adj_val = (gtk_adjustment_get_upper(adjustment)
+						- gtk_adjustment_get_page_size(adjustment));
+			gtk_adjustment_set_value(adjustment, adj_val);
+			gtk_viewport_set_vadjustment((GtkViewport *) tabData->ViewPort,
+					adjustment);
+		} else if (event->keyval == GDK_KEY_Control_L) {
+			cursor = gdk_cursor_new(GDK_HAND2);
+			gdk_window_set_cursor(
+					gtk_widget_get_parent_window(tabData->drawing_area), cursor);
+			MovePointMode = TRUE;
+		}
 	}
-
 	return 0;
 }
 
@@ -720,17 +725,20 @@ gint key_release_event(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	GdkCursor *cursor;
 	struct TabData *tabData;
 
-	tabData = (struct TabData *) data;
+	if (gtk_notebook_get_n_pages((GtkNotebook *) mainnotebook) > 0) {
+		tabData
+				= (struct TabData *) g_object_get_data(
+						G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *) mainnotebook,
+										gtk_notebook_get_current_page((GtkNotebook *) mainnotebook))),
+						DATA_STORE_NAME);
 
-	if (event->keyval == GDK_KEY_Control_L) {
-		//		if (ViewedTabNum != -1) {
-		cursor = gdk_cursor_new(GDK_CROSSHAIR);
-		gdk_window_set_cursor(
-				gtk_widget_get_parent_window(tabData->drawing_area), cursor);
-		MovePointMode = FALSE;
-		//		}
+		if (event->keyval == GDK_KEY_Control_L) {
+			cursor = gdk_cursor_new(GDK_CROSSHAIR);
+			gdk_window_set_cursor(
+					gtk_widget_get_parent_window(tabData->drawing_area), cursor);
+			MovePointMode = FALSE;
+		}
 	}
-
 	return 0;
 }
 
@@ -976,11 +984,6 @@ gint SetupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	tabData->setxypressed[3] = FALSE;
 
 	tabData->lastpoints = NULL;
-
-	g_signal_connect (G_OBJECT (table), "key_press_event",
-			G_CALLBACK (key_press_event), tabData);
-	g_signal_connect (G_OBJECT (table), "key_release_event",
-			G_CALLBACK (key_release_event), tabData);
 
 	for (i = 0; i < 4; i++) {
 		tabData->xyentry[i] = gtk_entry_new(); /* Create text entry */
@@ -1741,6 +1744,10 @@ int main(int argc, char **argv) {
 			NUM_IMAGE_DATA, (GDK_ACTION_COPY | GDK_ACTION_MOVE));
 	g_signal_connect(G_OBJECT (window), "drag-data-received", /* Drag and drop catch */
 			G_CALLBACK (drag_data_received), NULL);
+	g_signal_connect_swapped (G_OBJECT (window), "key_press_event",
+			G_CALLBACK (key_press_event), NULL);
+	g_signal_connect (G_OBJECT (window), "key_release_event",
+			G_CALLBACK (key_release_event), NULL);
 
 	/* Create menues */
 	action_group = gtk_action_group_new("MenuActions");
