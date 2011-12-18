@@ -1,0 +1,8 @@
+manpage.log
+*.o
+manpage.links
+g3data.1.gz
+manpage.refs
+g3data2
+.cproject
+.project

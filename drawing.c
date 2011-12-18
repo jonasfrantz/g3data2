@@ -23,7 +23,6 @@ Authors email : jonas@frantz.fi
 
  */
 
-#include <stdlib.h>
 #include <gtk/gtk.h>
 #include "main.h"
 
@@ -32,7 +31,7 @@ Authors email : jonas@frantz.fi
 /* the drawing_area depending on the value of the type		*/
 /* parameter.							*/
 /****************************************************************/
-void DrawMarker(cairo_t *cr, gint x, gint y, gint type) {
+void drawMarker(cairo_t *cr, gint x, gint y, gint type) {
 
 	if (type == 0) {
 		cairo_move_to(cr, x - MARKERLENGTH - 1, y);
@@ -49,8 +48,8 @@ void DrawMarker(cairo_t *cr, gint x, gint y, gint type) {
 		cairo_set_source_rgb(cr, 0, 0, 1);
 		cairo_stroke(cr);
 	} else {
-		cairo_rectangle(cr, x - OUTERSIZE, y - OUTERSIZE, OUTERSIZE * 2 + 1,
-				OUTERSIZE * 2 + 1);
+		cairo_rectangle(cr, x - MARKERSIZE, y - MARKERSIZE, MARKERSIZE * 2 + 1,
+				MARKERSIZE * 2 + 1);
 		cairo_set_source_rgb(cr, 1, 0, 0);
 		cairo_stroke(cr);
 	}

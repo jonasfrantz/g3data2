@@ -23,8 +23,8 @@ Authors email : jonas@frantz.fi
 
  */
 
+#include <gtk/gtk.h>
 #include "main.h"
-#include <glib.h>
 
 /****************************************************************/
 /* The following sorting functions is a copy of the example in  */
@@ -61,7 +61,7 @@ gint compare3(struct PointValue *RealPos, gint i, gint j, gint orderv) {
 	}
 }
 
-void Order(struct PointValue *RealPos, gint left, gint right, gint ordering) {
+void orderPoints(struct PointValue *RealPos, gint left, gint right, gint ordering) {
 	gint i, last;
 
 	if (left >= right)
@@ -76,6 +76,6 @@ void Order(struct PointValue *RealPos, gint left, gint right, gint ordering) {
 			swap3(RealPos, ++last, i);
 
 	swap3(RealPos, left, last);
-	Order(RealPos, left, last - 1, ordering);
-	Order(RealPos, last + 1, right, ordering);
+	orderPoints(RealPos, left, last - 1, ordering);
+	orderPoints(RealPos, last + 1, right, ordering);
 }

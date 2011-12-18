@@ -28,20 +28,20 @@ Authors email : jonas@frantz.fi
         { "FileMenu", NULL, "_File" },
         { "ViewMenu", NULL, "_View" },
         { "HelpMenu", NULL, "_Help" },
-        { "Open", GTK_STOCK_OPEN, "_Open", "<control>O", "Open an image in a new tab", (GCallback) menu_file_open },
-        { "Quit", GTK_STOCK_QUIT, "_Quit", "<control>Q", "Quit program", (GCallback) menu_file_exit },
-        { "About", GTK_STOCK_HELP, "_About", "<control>H", "About g3data", (GCallback) menu_help_about }
+        { "Open", GTK_STOCK_OPEN, "_Open", "<control>O", "Open an image in a new tab", (GCallback) menuFileOpen },
+        { "Quit", GTK_STOCK_QUIT, "_Quit", "<control>Q", "Quit program", (GCallback) menuFileExit },
+        { "About", GTK_STOCK_HELP, "_About", "<control>H", "About g3data", (GCallback) menuHelpAbout }
   };
 
   GtkActionEntry closeaction[] = {
-        { "Close", GTK_STOCK_CLOSE, "_Close", "<control>C", "Close current tab", (GCallback) menu_tab_close }
+        { "Close", GTK_STOCK_CLOSE, "_Close", "<control>C", "Close current tab", (GCallback) menuTabClose }
   };
 
   GtkToggleActionEntry toggle_entries[] = {
-	{ "Zoom area", NULL, "Zoom area", "F5", "Hide zoom area", (GCallback) hide_zoom_area_callback, FALSE },
-	{ "Axis settings", NULL, "Axis settings", "F6", "Hide axis settings", (GCallback) hide_axis_settings_callback, FALSE },
-	{ "Output properties", NULL, "Output properties", "F7", "Hide output properties", (GCallback) hide_output_prop_callback, FALSE },
-	{ "FullScreen", NULL, "_Full Screen", "F11", "Switch between full screen and windowed mode", (GCallback) full_screen_action_callback, FALSE }
+	{ "Zoom area", NULL, "Zoom area", "F5", "Hide zoom area", (GCallback) hideZoomArea, FALSE },
+	{ "Axis settings", NULL, "Axis settings", "F6", "Hide axis settings", (GCallback) hideAxisSettings, FALSE },
+	{ "Output properties", NULL, "Output properties", "F7", "Hide output properties", (GCallback) hideOutputProperties, FALSE },
+	{ "FullScreen", NULL, "_Full Screen", "F11", "Switch between full screen and windowed mode", (GCallback) toggleFullscreen, FALSE }
   };
 
 /* Menu definitions */
@@ -71,8 +71,8 @@ Authors email : jonas@frantz.fi
 /* Drag and drop definitions */
 
 static GtkTargetEntry ui_drop_target_entries [NUM_IMAGE_DATA] = {
-  {"text/uri-list", 0, URI_LIST},
-  {"image/png",     0, PNG_DATA},
-  {"image/jpeg",    0, JPEG_DATA},
-  {"application/x-color",    0, APP_X_COLOR}
+  {"text/uri-list", GTK_TARGET_OTHER_APP, URI_LIST},
+  {"image/png",     GTK_TARGET_OTHER_APP, PNG_DATA},
+  {"image/jpeg",    GTK_TARGET_OTHER_APP, JPEG_DATA},
+  {"application/x-color",    GTK_TARGET_OTHER_APP, APP_X_COLOR}
 };

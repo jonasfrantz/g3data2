@@ -23,7 +23,6 @@ Authors email : jonas@frantz.fi
 
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <math.h>
@@ -31,19 +30,8 @@ Authors email : jonas@frantz.fi
 
 /* Extern functions */
 
-extern void Order(struct PointValue *RealPos, gint left, gint right,
+extern void orderPoints(struct PointValue *RealPos, gint left, gint right,
 		gint ordering);
-
-/****************************************************************/
-/* This function sets the numpoints entry to numpoints variable	*/
-/* value.							*/
-/****************************************************************/
-void SetNumPointsEntry(GtkWidget *np_entry, gint np) {
-	char buf[128];
-
-	sprintf(buf, "%d", np);
-	gtk_entry_set_text(GTK_ENTRY(np_entry), buf);
-}
 
 /****************************************************************/
 /* This function returns the integer with the lesser value.	*/
@@ -59,9 +47,9 @@ gint min(gint x, gint y) {
 /* This function calculates the true value of the point based	*/
 /* on the coordinates of the point on the bitmap.		*/
 /****************************************************************/
-struct PointValue CalcPointValue(gint Xpos, gint Ypos, struct TabData *tabData) {
+struct PointValue calculatePointValue(gint Xpos, gint Ypos, struct TabData *tabData) {
 	double alpha, beta, x21, x43, y21, y43, rlc[4]; /* Declare help variables */
-	struct PointValue PV;
+	struct PointValue pointValue;
 
 	x21 = (double) tabData->axiscoords[1][0] - tabData->axiscoords[0][0]; /* Calculate deltax of x axis points */
 	y21 = (double) tabData->axiscoords[1][1] - tabData->axiscoords[0][1]; /* Calculate deltay of x axis points */
@@ -92,14 +80,14 @@ struct PointValue CalcPointValue(gint Xpos, gint Ypos, struct TabData *tabData) 
 			- ((x43 * y21) / x21));
 
 	if (tabData->logxy[0])
-		PV.Xv = exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
+		pointValue.Xv = exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
 	else
-		PV.Xv = -alpha * (rlc[1] - rlc[0]) + rlc[0];
+		pointValue.Xv = -alpha * (rlc[1] - rlc[0]) + rlc[0];
 
 	if (tabData->logxy[1])
-		PV.Yv = exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
+		pointValue.Yv = exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
 	else
-		PV.Yv = -beta * (rlc[3] - rlc[2]) + rlc[2];
+		pointValue.Yv = -beta * (rlc[3] - rlc[2]) + rlc[2];
 
 	alpha = ((tabData->axiscoords[0][0] - (double) (Xpos + 1))
 			- (tabData->axiscoords[0][1] - (double) (Ypos + 1)) * (x43 / y43))
@@ -109,14 +97,14 @@ struct PointValue CalcPointValue(gint Xpos, gint Ypos, struct TabData *tabData) 
 			/ (y43 - ((x43 * y21) / x21));
 
 	if (tabData->logxy[0])
-		PV.Xerr = exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
+		pointValue.Xerr = exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
 	else
-		PV.Xerr = -alpha * (rlc[1] - rlc[0]) + rlc[0];
+		pointValue.Xerr = -alpha * (rlc[1] - rlc[0]) + rlc[0];
 
 	if (tabData->logxy[1])
-		PV.Yerr = exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
+		pointValue.Yerr = exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
 	else
-		PV.Yerr = -beta * (rlc[3] - rlc[2]) + rlc[2];
+		pointValue.Yerr = -beta * (rlc[3] - rlc[2]) + rlc[2];
 
 	alpha = ((tabData->axiscoords[0][0] - (double) (Xpos - 1))
 			- (tabData->axiscoords[0][1] - (double) (Ypos - 1)) * (x43 / y43))
@@ -126,19 +114,19 @@ struct PointValue CalcPointValue(gint Xpos, gint Ypos, struct TabData *tabData) 
 			/ (y43 - ((x43 * y21) / x21));
 
 	if (tabData->logxy[0])
-		PV.Xerr -= exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
+		pointValue.Xerr -= exp(-alpha * (rlc[1] - rlc[0]) + rlc[0]);
 	else
-		PV.Xerr -= -alpha * (rlc[1] - rlc[0]) + rlc[0];
+		pointValue.Xerr -= -alpha * (rlc[1] - rlc[0]) + rlc[0];
 
 	if (tabData->logxy[1])
-		PV.Yerr -= exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
+		pointValue.Yerr -= exp(-beta * (rlc[3] - rlc[2]) + rlc[2]);
 	else
-		PV.Yerr -= -beta * (rlc[3] - rlc[2]) + rlc[2];
+		pointValue.Yerr -= -beta * (rlc[3] - rlc[2]) + rlc[2];
 
-	PV.Xerr = fabs(PV.Xerr / 4.0);
-	PV.Yerr = fabs(PV.Yerr / 4.0);
+	pointValue.Xerr = fabs(pointValue.Xerr / 4.0);
+	pointValue.Yerr = fabs(pointValue.Yerr / 4.0);
 
-	return PV;
+	return pointValue;
 }
 
 /****************************************************************/
@@ -146,15 +134,14 @@ struct PointValue CalcPointValue(gint Xpos, gint Ypos, struct TabData *tabData) 
 /* pressed, it calculate the values of the datapoints and 	*/
 /* prints them through stdout.					*/
 /****************************************************************/
-void print_results(GtkWidget *widget, gpointer data) {
+void outputResultset(GtkWidget *widget, gpointer data) {
 	gint i; /* Declare index variable */
 	gboolean print2file;
 	FILE *FP;
 	struct TabData *tabData;
+	struct PointValue *realPositions, calculatedValue;
 
 	tabData = (struct TabData *) data;
-
-	struct PointValue *RealPos, CalcVal;
 
 	print2file = tabData->Action;
 
@@ -166,43 +153,43 @@ void print_results(GtkWidget *widget, gpointer data) {
 		}
 	}
 
-	RealPos = (struct PointValue *) malloc(
+	realPositions = (struct PointValue *) malloc(
 			sizeof(struct PointValue) * tabData->numpoints);
 
 	/* Next up is recalculating the positions of the points by solving a 2*2 matrix */
 
 	for (i = 0; i < tabData->numpoints; i++) {
-		CalcVal = CalcPointValue(tabData->points[i][0],
+		calculatedValue = calculatePointValue(tabData->points[i][0],
 				tabData->points[i][1], tabData);
-		RealPos[i].Xv = CalcVal.Xv;
-		RealPos[i].Yv = CalcVal.Yv;
-		RealPos[i].Xerr = CalcVal.Xerr;
-		RealPos[i].Yerr = CalcVal.Yerr;
+		realPositions[i].Xv = calculatedValue.Xv;
+		realPositions[i].Yv = calculatedValue.Yv;
+		realPositions[i].Xerr = calculatedValue.Xerr;
+		realPositions[i].Yerr = calculatedValue.Yerr;
 	}
 
 	if (tabData->ordering != 0) {
-		Order(RealPos, 0, tabData->numpoints - 1, tabData->ordering);
+		orderPoints(realPositions, 0, tabData->numpoints - 1, tabData->ordering);
 	}
 
 	/* Print results to stdout or file */
 
 	for (i = 0; i < tabData->numpoints; i++) {
 		if (print2file == PRINT2FILE) {
-			fprintf(FP, "%.12g  %.12g", RealPos[i].Xv, RealPos[i].Yv);
+			fprintf(FP, "%.12g  %.12g", realPositions[i].Xv, realPositions[i].Yv);
 			if (tabData->UseErrors) {
-				fprintf(FP, "\t%.12g  %.12g\n", RealPos[i].Xerr,
-						RealPos[i].Yerr);
+				fprintf(FP, "\t%.12g  %.12g\n", realPositions[i].Xerr,
+						realPositions[i].Yerr);
 			} else
 				fprintf(FP, "\n");
 		} else {
-			printf("%.12g  %.12g", RealPos[i].Xv, RealPos[i].Yv);
+			printf("%.12g  %.12g", realPositions[i].Xv, realPositions[i].Yv);
 			if (tabData->UseErrors) {
-				printf("\t%.12g  %.12g\n", RealPos[i].Xerr, RealPos[i].Yerr);
+				printf("\t%.12g  %.12g\n", realPositions[i].Xerr, realPositions[i].Yerr);
 			} else
 				printf("\n");
 		}
 	}
-	free(RealPos);
+	free(realPositions);
 
 	if (print2file == PRINT2FILE)
 		fclose(FP);

@@ -22,24 +22,24 @@ Copyright (C) 2011 Jonas Frantz
 Authors email : jonas@frantz.fi
 
  */
-#include <gtk/gtk.h>									/* Include gtk library */
+#include <gtk/gtk.h>					/* Include gtk library */
 
 #define VERSION "1.0.0"					/* Version number */
 
 #define ZOOMPIXSIZE 200					/* Size of zoom in window */
 #define ZOOMFACTOR 4					/* Zoom factor of zoom window */
-#define INNERSIZE 1					/* Size of point marker white inner square */
-#define OUTERSIZE 3					/* Size of point marker red outer square */
+#define MARKERSIZE 3					/* Size of point marker red outer square */
 #define MARKERLENGTH 6					/* Axis marker length */
-#define MARKERTHICKNESS 2				/* Axis marker thickness */
-#define MAXPOINTS 256					/* Maximum number of points per memory allocation */
-#define MAXNUMTABS 128					/* Maximum number of open tabs */
+#define MARKERTHICKNESS 2				/* Marker line thickness */
+#define MAXPOINTS 64					/* Number of points to allocate at once */
 #define MAXNUMFILES 256
-#define MOVETRESHOLD 3
+#define GRABTRESHOLD MARKERSIZE*2
 
 #define ACTIONBNUM 2
 #define ORDERBNUM 3
 #define LOGBNUM 2
+
+#define NONESELECTED -1
 
 #define URI_IDENTIFIER "file://"
 
@@ -93,6 +93,10 @@ struct TabData {
 	gchar FileNames[256];
 
 	gint mousePointerCoords[2];
+
+	gint movedPointIndex;
+	gint movedOrigCoords[2];
+	gint movedOrigMousePtrCoords[2];
 };
 
 struct ButtonData {
@@ -100,3 +104,12 @@ struct ButtonData {
 	gint index;
 };
 
+struct GtkSelectionData_x {
+  GdkAtom       selection;
+  GdkAtom       target;
+  GdkAtom       type;
+  gint          format;
+  guchar       *data;
+  gint          length;
+  GdkDisplay   *display;
+};
