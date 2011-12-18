@@ -1,8 +1,7 @@
-manpage.log
 *.o
-manpage.links
-g3data.1.gz
-manpage.refs
+manpage.*
+g3data2.1.gz
 g3data2
 .cproject
 .project
+Release/*
