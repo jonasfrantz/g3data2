@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall `pkg-config --cflags gtk+-3.0` -DG_DISABLE_DEPRECATED=1 -DGDK_DISABLE_DEPRECATED=1 -DGDK_PIXBUF_DISABLE_DEPRECATED=1 -DGTK_DISABLE_DEPRECATED=1
-LIBS=`pkg-config --libs gtk+-3.0`
+LIBS=-lm `pkg-config --libs gtk+-3.0`
 bindir ?= /usr/bin
 mandir ?= /usr/share/man
 

@@ -23,6 +23,15 @@ Authors email : jonas@frantz.fi
 
 */
 
+GCallback menuFileOpen(void);
+GCallback menuFileExit(void);
+GCallback menuHelpAbout(void);
+GCallback menuTabClose(void);
+GCallback toggleFullscreen(GtkWidget *widget, gpointer func_data);
+GCallback hideZoomArea(GtkWidget *widget, gpointer func_data);
+GCallback hideAxisSettings(GtkWidget *widget, gpointer func_data);
+GCallback hideOutputProperties(GtkWidget *widget, gpointer func_data);
+
 /* Actions definitions */
   GtkActionEntry entries[] = {
         { "FileMenu", NULL, "_File" },
@@ -70,7 +79,7 @@ Authors email : jonas@frantz.fi
 
 /* Drag and drop definitions */
 
-static GtkTargetEntry ui_drop_target_entries [NUM_IMAGE_DATA] = {
+static GtkTargetEntry ui_drop_target_entries[NUM_IMAGE_DATA] = {
   {"text/uri-list", GTK_TARGET_OTHER_APP, URI_LIST},
   {"image/png",     GTK_TARGET_OTHER_APP, PNG_DATA},
   {"image/jpeg",    GTK_TARGET_OTHER_APP, JPEG_DATA},

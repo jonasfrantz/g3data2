@@ -31,6 +31,7 @@
 #include <libgen.h>
 #include "main.h"									/* Include predefined variables */
 #include "strings.h"								/* Include strings */
+#include "vardefs.h"
 
 #ifdef NOSPACING
 #define SECT_SEP 0
@@ -439,13 +440,18 @@ gint mouseMotionEvent(GtkWidget *widget, GdkEventMotion *event, gpointer data) {
 					- tabData->movedOrigMousePtrCoords[0]);
 			tabData->points[i][1] = tabData->movedOrigCoords[1] + (y
 					- tabData->movedOrigMousePtrCoords[1]);
-			triggerUpdateDrawArea(tabData->drawing_area);
+			gint oldX = tabData->mousePointerCoords[0];
+			gint oldY = tabData->mousePointerCoords[1];
 			tabData->mousePointerCoords[0] = tabData->points[i][0];
 			tabData->mousePointerCoords[1] = tabData->points[i][1];
+
+			triggerLimitedUpdateDrawArea(tabData->drawing_area, oldX, oldY);
+			triggerLimitedUpdateDrawArea(tabData->drawing_area, tabData->mousePointerCoords[0], tabData->mousePointerCoords[1]);
 		} else {
 			tabData->mousePointerCoords[0] = x;
 			tabData->mousePointerCoords[1] = y;
 		}
+
 		triggerUpdateDrawArea(tabData->zoom_area);
 
 		if (tabData->valueset[0] && tabData->valueset[1]
@@ -1116,17 +1122,17 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 				tabData->logxy[i]);
 	}
 
-	tophbox = gtk_hbox_new(FALSE, SECT_SEP);
+	tophbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SECT_SEP);
 	alignment = gtk_alignment_new(0, 0, 0, 0);
 	gtk_table_attach(GTK_TABLE(table), alignment, 0, 1, 0, 1, 5, 0, 0, 0);
 	gtk_container_add((GtkContainer *) alignment, tophbox);
 
-	bottomhbox = gtk_hbox_new(FALSE, SECT_SEP);
+	bottomhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, SECT_SEP);
 	alignment = gtk_alignment_new(0, 0, 1, 1);
 	gtk_table_attach(GTK_TABLE(table), alignment, 0, 1, 1, 2, 5, 5, 0, 0);
 	gtk_container_add((GtkContainer *) alignment, bottomhbox);
 
-	tlvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	tlvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	gtk_box_pack_start(GTK_BOX (tophbox), tlvbox, FALSE, FALSE, ELEM_SEP);
 	APlabel = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL (APlabel), APheader);
@@ -1148,7 +1154,7 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 				0, 0, 0, 0);
 	}
 
-	trvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	trvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	gtk_box_pack_start(GTK_BOX (tophbox), trvbox, FALSE, FALSE, ELEM_SEP);
 
 	PIlabel = gtk_label_new(NULL);
@@ -1188,17 +1194,17 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_table_attach(GTK_TABLE(table), tabData->nump_entry, 1, 2, 0, 1, 0, 0,
 			0, 0);
 
-	blvbox = gtk_vbox_new(FALSE, GROUP_SEP);
+	blvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, GROUP_SEP);
 	gtk_box_pack_start(GTK_BOX (bottomhbox), blvbox, FALSE, FALSE, ELEM_SEP);
 
-	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	subvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX (subvbox), tabData->remlastbutton, FALSE, FALSE,
 			0); /* Pack button in vert. box */
 	gtk_box_pack_start(GTK_BOX (subvbox), tabData->remallbutton, FALSE, FALSE,
 			0); /* Pack button in vert. box */
 
-	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	subvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	tabData->zoomareabox = subvbox;
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	ZAlabel = gtk_label_new(NULL);
@@ -1210,7 +1216,7 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_fixed_put((GtkFixed *) fixed, tabData->zoom_area, FRAME_INDENT, 0);
 	gtk_box_pack_start(GTK_BOX (subvbox), fixed, FALSE, FALSE, 0);
 
-	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	subvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	tabData->logbox = subvbox;
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	Llabel = gtk_label_new(NULL);
@@ -1237,7 +1243,7 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	}
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON (ordercheckb[0]), TRUE); /* Set no ordering button active */
 
-	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	subvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	tabData->oppropbox = subvbox;
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	Olabel = gtk_label_new(NULL);
@@ -1267,7 +1273,7 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 	gtk_fixed_put((GtkFixed *) fixed, UseErrCheckB, FRAME_INDENT, 0);
 	gtk_box_pack_start(GTK_BOX (subvbox), fixed, FALSE, FALSE, 0);
 
-	subvbox = gtk_vbox_new(FALSE, ELEM_SEP);
+	subvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, ELEM_SEP);
 	gtk_box_pack_start(GTK_BOX (blvbox), subvbox, FALSE, FALSE, 0);
 	group = NULL;
 	for (i = 0; i < ACTIONBNUM; i++) {
@@ -1327,7 +1333,7 @@ gint setupNewTab(char *filename, gdouble Scale, gdouble maxX, gdouble maxY,
 			G_CALLBACK (outputResultset), tabData);
 	gtk_widget_set_tooltip_text(tabData->exportbutton, printrestt);
 
-	brvbox = gtk_vbox_new(FALSE, GROUP_SEP);
+	brvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, GROUP_SEP);
 	gtk_box_pack_start(GTK_BOX (bottomhbox), brvbox, TRUE, TRUE, 0);
 
 	gtk_entry_set_text(GTK_ENTRY (tabData->file_entry), buf2); /* Set text of text entry to filename */
@@ -1518,7 +1524,7 @@ GCallback menuFileOpen(void) {
 	gtk_file_chooser_set_filter((GtkFileChooser *) dialog,
 			(GtkFileFilter *) filefilter);
 
-	hboxextra = gtk_hbox_new(FALSE, ELEM_SEP);
+	hboxextra = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, ELEM_SEP);
 
 	scalelabel = gtk_label_new(scale_string);
 
@@ -1718,6 +1724,7 @@ GCallback notebookTabSwitchEventHandler(GtkNotebook *notebook, GtkWidget *page,
 	return NULL;
 }
 
+
 /****************************************************************/
 /* This is the main function, this function gets called when	*/
 /* the program is executed. It allocates the necessary work-	*/
@@ -1737,8 +1744,6 @@ int main(int argc, char **argv) {
 	GtkUIManager *ui_manager;
 	GtkAccelGroup *accel_group;
 	GError *error;
-
-#include "vardefs.h"
 
 	gtk_init(&argc, &argv); /* Init GTK */
 
@@ -1839,7 +1844,7 @@ int main(int argc, char **argv) {
 	gtk_window_set_title(GTK_WINDOW (window), Window_Title_NoneOpen); /* Set window title */
 	gtk_window_set_resizable(GTK_WINDOW (window), TRUE);
 	gtk_container_set_border_width(GTK_CONTAINER (window), 0); /* Set borders in window */
-	mainvbox = gtk_vbox_new(FALSE, 0);
+	mainvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add(GTK_CONTAINER(window), mainvbox);
 
 	g_signal_connect(G_OBJECT (window), "delete_event", /* Init delete event of window */
