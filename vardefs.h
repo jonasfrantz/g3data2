@@ -79,9 +79,6 @@ GCallback hideOutputProperties(GtkWidget *widget, gpointer func_data);
 
 /* Drag and drop definitions */
 
-static GtkTargetEntry ui_drop_target_entries[NUM_IMAGE_DATA] = {
-  {"text/uri-list", GTK_TARGET_OTHER_APP, URI_LIST},
-  {"image/png",     GTK_TARGET_OTHER_APP, PNG_DATA},
-  {"image/jpeg",    GTK_TARGET_OTHER_APP, JPEG_DATA},
-  {"application/x-color",    GTK_TARGET_OTHER_APP, APP_X_COLOR}
+static GtkTargetEntry ui_drop_target_entries[DROP_TARGET_NUM_DEFS] = {
+		{"text/uri-list", GTK_TARGET_OTHER_APP, URI_LIST}
 };

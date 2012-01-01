@@ -52,7 +52,7 @@ typedef enum {
 } ACTION;
 
 typedef enum {
-	URI_LIST, PNG_DATA, JPEG_DATA, APP_X_COLOR, NUM_IMAGE_DATA,
+	URI_LIST, DROP_TARGET_NUM_DEFS
 } UI_DROP_TARGET_INFO;
 
 struct TabData {
